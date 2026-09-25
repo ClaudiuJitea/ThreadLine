@@ -227,8 +227,8 @@ export function Sidebar({
           >
             {/* Top section */}
             <div className="flex flex-col items-center gap-1.5 w-full">
-              {/* Header row (h-11 alignment with ChatArea header) */}
-              <div className="h-11 flex items-center justify-center border-b border-[#D6CEC1] bg-[#ECE5DB]/80 w-full shrink-0 -mt-2 shadow-[inset_0_-1px_0_0_rgba(255,255,255,0.5)] group/railheader">
+              {/* Header row (h-10.5 alignment with ChatArea header) */}
+              <div className="mx-1.5 mt-2 h-10.5 rounded-xl border border-[#D6CEC1] bg-[#ECE5DB]/85 flex items-center justify-center shrink-0 shadow-2xs group/railheader">
                 <button
                   type="button"
                   onClick={onToggleOpen}
@@ -331,7 +331,7 @@ export function Sidebar({
             </div>
 
             {/* Bottom section */}
-            <div className="flex flex-col items-center gap-1.5 w-full pt-1.5 border-t border-[#D6CEC1] bg-[#ECE6DC]/85 mt-auto pb-1">
+            <div className="mx-1.5 mb-2 py-1.5 rounded-xl border border-[#D6CEC1] bg-[#ECE6DC]/85 flex flex-col items-center gap-1.5 w-8.5 mt-auto shadow-2xs">
               <div
                 className="w-7 h-7 rounded-md flex items-center justify-center text-[#536E59] hover:bg-[#F0E9DE] cursor-help transition-colors"
                 title="Local Browser Storage: Chat history is saved solely on this device."
@@ -359,7 +359,7 @@ export function Sidebar({
             }`}
           >
           {/* Header aligned with the conversation header */}
-          <div className="h-11 px-3.5 border-b border-[#D6CEC1] bg-[#ECE5DB]/80 backdrop-blur-xs flex items-center justify-between gap-2 shrink-0 shadow-[inset_0_-1px_0_0_rgba(255,255,255,0.5)]">
+          <div className="mx-2 mt-2 h-10.5 px-3 rounded-xl border border-[#D6CEC1] bg-[#ECE5DB]/85 backdrop-blur-xs flex items-center justify-between gap-2 shrink-0 shadow-2xs">
             <div className="flex items-center gap-2.5 min-w-0 select-none">
               <div className="w-7 h-7 rounded-lg bg-[#344D3C] flex items-center justify-center text-[#F8F5EF] shadow-2xs shrink-0">
                 <ThreadLineLogo className="w-3.5 h-3.5" />
@@ -387,7 +387,7 @@ export function Sidebar({
           </div>
 
           {/* Top Actions: New chat button & Search chats directly underneath */}
-          <div className="px-2.5 pt-2.5 pb-2 flex flex-col gap-2 shrink-0 border-b border-[#D6CEC1]/50">
+          <div className="px-2.5 pt-2 pb-1.5 flex flex-col gap-2 shrink-0">
             {/* Primary Action Button - New Chat on top */}
             <button
               type="button"
@@ -626,7 +626,7 @@ export function Sidebar({
           </div>
 
           {/* Workspace footer with Storage status & Sign out */}
-          <div className="px-2.5 py-2.5 pb-[calc(0.6rem+env(safe-area-inset-bottom,0px))] border-t border-[#D6CEC1] bg-[#ECE6DC]/90 backdrop-blur-xs shrink-0 shadow-[0_-1px_3px_rgba(40,36,30,0.02)]">
+          <div className="mx-2 mb-2 p-2.5 rounded-xl border border-[#D6CEC1] bg-[#ECE6DC]/90 backdrop-blur-xs shrink-0 shadow-2xs">
             {/* Storage status & Sign out row */}
             <div className="flex items-center justify-between px-1.5 py-0.5 text-[10px] text-[#7A786F]">
               <span className="flex items-center gap-1.5 select-none" title="Local Browser Storage: Chat history is saved solely on this device.">
