@@ -335,8 +335,13 @@ export function Sidebar({
               </div>
             </div>
 
+            {/* Stylish floating separator in rail view above bottom section */}
+            <div className="w-6 flex items-center justify-center my-1.5 shrink-0 mt-auto" aria-hidden="true">
+              <div className="w-full h-px bg-gradient-to-r from-transparent via-[#CEC4B4] to-transparent" />
+            </div>
+
             {/* Bottom section */}
-            <div className="mx-1.5 mb-2 py-1.5 rounded-xl border border-[#D6CEC1] bg-[#ECE6DC]/85 flex flex-col items-center gap-1.5 w-8.5 mt-auto shadow-2xs">
+            <div className="mx-1.5 mb-2 py-1.5 rounded-xl border border-[#D6CEC1] bg-[#ECE6DC]/85 flex flex-col items-center gap-1.5 w-8.5 shadow-2xs">
               <div
                 className="w-7 h-7 rounded-md flex items-center justify-center text-[#536E59] hover:bg-[#F0E9DE] cursor-help transition-colors"
                 title="Local Browser Storage: Chat history is saved solely on this device."
@@ -633,6 +638,11 @@ export function Sidebar({
               })
             )}
             </div>
+          </div>
+
+          {/* Stylish floating separator above Workspace footer */}
+          <div className="px-5 pt-1 pb-2.5 flex items-center justify-center shrink-0" aria-hidden="true">
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-[#CEC4B4] to-transparent" />
           </div>
 
           {/* Workspace footer with Storage status & Sign out */}
