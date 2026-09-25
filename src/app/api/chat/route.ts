@@ -379,6 +379,17 @@ export async function POST(request: Request) {
     ];
   }
 
+  // Ensure no message with completely empty content is sent to OpenRouter
+  outgoingMessages = outgoingMessages.filter((msg) => {
+    if (typeof msg.content === "string") {
+      return msg.content.trim().length > 0;
+    }
+    if (Array.isArray(msg.content)) {
+      return msg.content.length > 0;
+    }
+    return Boolean(msg.content);
+  });
+
   // 11. Forward request to OpenRouter API
   try {
     const openRouterResponse = await fetch(

@@ -313,7 +313,18 @@ export function ChatContainer() {
       target: string;
     }
   ) => {
-    if (!activeConversation) return;
+    const targetConversationId =
+      activeConversation?.id || effectiveActiveId || conversations[0]?.id;
+    if (!targetConversationId) return;
+
+    if (activeConversationId !== targetConversationId) {
+      setActiveConversationId(targetConversationId);
+      setStoredActiveConversationId(targetConversationId);
+    }
+
+    const targetConversation =
+      conversations.find((c) => c.id === targetConversationId) || activeConversation;
+    if (!targetConversation) return;
 
     const isTranslationActive =
       customTranslation !== undefined
@@ -346,7 +357,7 @@ export function ChatContainer() {
     };
 
     const currentHistory =
-      customHistory !== undefined ? customHistory : activeConversation.messages;
+      customHistory !== undefined ? customHistory : targetConversation.messages;
 
     // Check request budget and prune older images if necessary
     const aspectRatio = customAspectRatio || selectedAspectRatio;
@@ -362,7 +373,7 @@ export function ChatContainer() {
     }
 
     // Auto-generate conversation title from the first message
-    let updatedTitle = activeConversation.title;
+    let updatedTitle = targetConversation.title;
     if (
       currentHistory.length === 0 &&
       (updatedTitle === "New Conversation" || !updatedTitle)
@@ -397,7 +408,7 @@ export function ChatContainer() {
     // Update conversation with user message and empty assistant message
     setConversations((prev) =>
       prev.map((c) => {
-        if (c.id === activeConversationId) {
+        if (c.id === targetConversationId) {
           const baseMessages =
             customHistory !== undefined ? customHistory : c.messages;
           return {
@@ -503,7 +514,7 @@ export function ChatContainer() {
                 setIsSearchingWeb(false);
                 setConversations((prev) =>
                   prev.map((c) => {
-                    if (c.id === activeConversationId) {
+                    if (c.id === targetConversationId) {
                       return {
                         ...c,
                         messages: c.messages.map((m) =>
@@ -529,7 +540,7 @@ export function ChatContainer() {
                 cacheGeneratedImage(generatedImage);
                 setConversations((prev) =>
                   prev.map((c) => {
-                    if (c.id === activeConversationId) {
+                    if (c.id === targetConversationId) {
                       return {
                         ...c,
                         messages: c.messages.map((m) =>
@@ -558,7 +569,7 @@ export function ChatContainer() {
 
                 setConversations((prev) =>
                   prev.map((c) => {
-                    if (c.id === activeConversationId) {
+                    if (c.id === targetConversationId) {
                       return {
                         ...c,
                         messages: c.messages.map((m) =>
@@ -591,7 +602,7 @@ export function ChatContainer() {
 
       setConversations((prev) =>
         prev.map((c) => {
-          if (c.id === activeConversationId) {
+          if (c.id === targetConversationId) {
             return {
               ...c,
               messages: c.messages.map((m) =>

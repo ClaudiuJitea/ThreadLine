@@ -178,34 +178,80 @@ export function buildPayloadWithBudgetControl(
     }
   }
 
-  // Deep clone history messages with their data URLs
-  const candidateHistory = history.map((msg) => {
-    const validImages = (msg.attachments || []).filter((a) => a.dataUrl);
+  // Deep clone and sanitize history messages, ensuring previous context is valid
+  const candidateHistory: {
+    role: "user" | "assistant" | "system";
+    content: string | OpenRouterContentPart[];
+    hasImages: boolean;
+    imageParts: ImageAttachmentMetadata[];
+  }[] = [];
 
-    if (validImages.length === 0) {
-      return {
-        role: msg.role,
-        content: msg.content,
-        hasImages: false,
-        imageParts: [] as OpenRouterContentPart[],
-      };
+  for (const msg of history) {
+    // 1. Skip error messages so failed assistant attempts do not pollute model context
+    if (msg.isError) {
+      continue;
     }
 
-    const parts: OpenRouterContentPart[] = [
-      { type: "text", text: msg.content || "" },
-      ...validImages.map((img) => ({
-        type: "image_url" as const,
-        image_url: { url: img.dataUrl! },
-      })),
-    ];
+    const validImages = (msg.attachments || []).filter((a) => Boolean(a.dataUrl));
 
-    return {
-      role: msg.role,
-      content: parts,
-      hasImages: true,
-      imageParts: validImages,
-    };
-  });
+    if (msg.role === "assistant") {
+      let cleanContent = msg.content || "";
+      // Strip internal <think>...</think> reasoning tags if present so clean context is passed
+      const thinkStart = cleanContent.indexOf("<think>");
+      const thinkEnd = cleanContent.indexOf("</think>");
+      if (thinkStart !== -1 && thinkEnd !== -1) {
+        const rest = (cleanContent.slice(0, thinkStart) + cleanContent.slice(thinkEnd + 8)).trim();
+        if (rest.length > 0) {
+          cleanContent = rest;
+        }
+      }
+
+      // If assistant message has empty text but generated images, provide a readable description
+      if (!cleanContent.trim()) {
+        if (msg.generatedImages && msg.generatedImages.length > 0) {
+          cleanContent = `[Generated image: ${msg.generatedImages[0].prompt || "visual output"}]`;
+        } else {
+          // Skip empty assistant messages to avoid OpenRouter 400 Bad Request
+          continue;
+        }
+      }
+
+      candidateHistory.push({
+        role: "assistant",
+        content: cleanContent,
+        hasImages: false,
+        imageParts: [],
+      });
+    } else if (msg.role === "user") {
+      // If user turn has images
+      if (validImages.length > 0) {
+        const parts: OpenRouterContentPart[] = [
+          { type: "text", text: msg.content || "" },
+          ...validImages.map((img) => ({
+            type: "image_url" as const,
+            image_url: { url: img.dataUrl! },
+          })),
+        ];
+        candidateHistory.push({
+          role: "user",
+          content: parts,
+          hasImages: true,
+          imageParts: validImages,
+        });
+      } else {
+        // User turn with text only
+        if (!msg.content.trim()) {
+          continue; // Skip empty user turn
+        }
+        candidateHistory.push({
+          role: "user",
+          content: msg.content,
+          hasImages: false,
+          imageParts: [],
+        });
+      }
+    }
+  }
 
   let droppedImageCount = 0;
   let droppedMessageCount = 0;

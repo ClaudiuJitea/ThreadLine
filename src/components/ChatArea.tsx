@@ -1618,7 +1618,11 @@ export function ChatArea({
                 isTranslateEnabled && !activeModel.isImageGenerator
                   ? `Enter text to translate (${getLanguageName(translateSource)} → ${getLanguageName(translateTarget)})...`
                   : activeModel.isImageGenerator
-                  ? `Describe the image you want to generate with ${activeModel.name}... (e.g. A serene mountain lake at golden hour, digital art)`
+                  ? hasMessages
+                    ? "Ask a follow-up or describe another image..."
+                    : `Describe the image you want to generate with ${activeModel.name}... (e.g. A serene mountain lake at golden hour, digital art)`
+                  : hasMessages
+                  ? "Ask a follow-up"
                   : activeModel.supportsImages
                   ? `Message ${activeModel.name}... (paste images with Ctrl+V)`
                   : `Message ${activeModel.name}... (Shift+Enter for newline)`
