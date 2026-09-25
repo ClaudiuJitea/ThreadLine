@@ -683,22 +683,20 @@ export function ChatContainer() {
     );
   };
 
-  const handleToggleFlagMessage = useCallback((messageId: string) => {
+  const handleToggleFlagConversation = useCallback((conversationId: string) => {
     setConversations((prev) =>
       prev.map((c) => {
-        if (c.id === activeConversationId) {
+        if (c.id === conversationId) {
           return {
             ...c,
+            isFlagged: !c.isFlagged,
             updatedAt: Date.now(),
-            messages: c.messages.map((m) =>
-              m.id === messageId ? { ...m, isFlagged: !m.isFlagged } : m
-            ),
           };
         }
         return c;
       })
     );
-  }, [activeConversationId]);
+  }, []);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#F8F5EF] text-[#302D29]">
@@ -710,6 +708,7 @@ export function ChatContainer() {
         onNewChat={handleNewChat}
         onDeleteConversation={handleDeleteConversation}
         onRenameConversation={handleRenameConversation}
+        onToggleFlagConversation={handleToggleFlagConversation}
         onLogout={handleLogout}
         isOpen={isSidebarOpen}
         onToggleOpen={handleToggleSidebar}
@@ -719,6 +718,7 @@ export function ChatContainer() {
       <ChatArea
         conversationId={activeConversation?.id || ""}
         conversationTitle={activeConversation?.title || "New Conversation"}
+        isConversationFlagged={Boolean(activeConversation?.isFlagged)}
         messages={activeConversation?.messages || []}
         selectedModelId={selectedModelId}
         onSelectModel={handleSelectModel}
@@ -726,7 +726,7 @@ export function ChatContainer() {
         onEditPrompt={handleEditPrompt}
         onRetry={handleRetry}
         onStopGeneration={handleStopGeneration}
-        onToggleFlagMessage={handleToggleFlagMessage}
+        onToggleFlagConversation={handleToggleFlagConversation}
         isStreaming={isStreaming}
         isSearchingWeb={isSearchingWeb}
         isWebSearchEnabled={isWebSearchEnabled}

@@ -106,7 +106,8 @@ interface ChatAreaProps {
   ) => Promise<void>;
   onRetry: () => void;
   onStopGeneration: () => void;
-  onToggleFlagMessage?: (messageId: string) => void;
+  isConversationFlagged?: boolean;
+  onToggleFlagConversation?: (conversationId: string) => void;
   isStreaming: boolean;
   isSearchingWeb?: boolean;
   isWebSearchEnabled?: boolean;
@@ -179,6 +180,7 @@ function extractImageFiles(clipboardData: DataTransfer): File[] {
 export function ChatArea({
   conversationId,
   conversationTitle,
+  isConversationFlagged = false,
   messages,
   selectedModelId,
   onSelectModel,
@@ -186,7 +188,7 @@ export function ChatArea({
   onEditPrompt,
   onRetry,
   onStopGeneration,
-  onToggleFlagMessage,
+  onToggleFlagConversation,
   isStreaming,
   isSearchingWeb = false,
   isWebSearchEnabled = false,
@@ -217,17 +219,6 @@ export function ChatArea({
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editInputText, setEditInputText] = useState("");
   const [internalAspectRatio, setInternalAspectRatio] = useState<string>("1:1");
-  const [showOnlyFlagged, setShowOnlyFlagged] = useState(false);
-  const [prevConversationId, setPrevConversationId] = useState(conversationId);
-  if (prevConversationId !== conversationId) {
-    setPrevConversationId(conversationId);
-    setShowOnlyFlagged(false);
-  }
-
-  const flaggedCount = messages.filter((m) => m.isFlagged).length;
-  const displayedMessages = showOnlyFlagged
-    ? messages.filter((m) => m.isFlagged)
-    : messages;
 
   const activeModel = getModelInfo(selectedModelId);
 
@@ -733,7 +724,13 @@ export function ChatArea({
       )}
 
       {/* Top Navigation Bar - Refined Compact Layer */}
-      <header className="h-11 border-b border-[#D8CFC2]/75 bg-[#F4EFE6] px-3 sm:px-4 flex items-center justify-between z-20 shrink-0 shadow-[0_1px_2px_rgba(48,45,41,0.02)]">
+      <header
+        className={`h-11 border-b px-3 sm:px-4 flex items-center justify-between z-20 shrink-0 shadow-[0_1px_2px_rgba(48,45,41,0.02)] transition-colors duration-150 ${
+          isConversationFlagged
+            ? "border-[#E4D1C6] bg-[#F7EFE9]"
+            : "border-[#D8CFC2]/75 bg-[#F4EFE6]"
+        }`}
+      >
         <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
           {/* Mobile Sidebar Toggle Button */}
           <button
@@ -747,12 +744,20 @@ export function ChatArea({
           </button>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 min-w-0 py-0.5">
-            <h2
-              className="text-[12.5px] sm:text-[13px] font-semibold text-[#2D2A26] tracking-tight leading-none truncate max-w-[130px] xs:max-w-[180px] sm:max-w-xs md:max-w-sm lg:max-w-md"
-              title={conversationTitle || "New Conversation"}
-            >
-              {conversationTitle || "New Conversation"}
-            </h2>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h2
+                className="text-[12.5px] sm:text-[13px] font-semibold text-[#2D2A26] tracking-tight leading-none truncate max-w-[130px] xs:max-w-[180px] sm:max-w-xs md:max-w-sm lg:max-w-md"
+                title={conversationTitle || "New Conversation"}
+              >
+                {conversationTitle || "New Conversation"}
+              </h2>
+              {isConversationFlagged && (
+                <span className="inline-flex items-center text-[9px] font-semibold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[#F8DDD3] text-[#A84B2E] border border-[#DE9E87]/60 shrink-0">
+                  <Flag className="w-2.5 h-2.5 fill-current mr-0.5" />
+                  Flagged
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-[#716B62] leading-none min-w-0 mt-0.5 sm:mt-0">
               <span className="hidden sm:inline text-[#C7BFB2]">•</span>
               <span className="w-1.5 h-1.5 rounded-full bg-[#536E59] shrink-0" aria-hidden="true" />
@@ -781,38 +786,37 @@ export function ChatArea({
             </button>
           )}
 
-          {/* Flagged Messages Filter Toggle Button */}
-          {flaggedCount > 0 && (
+          {/* Conversation Flag Toggle Button */}
+          {onToggleFlagConversation && conversationId && (
             <button
               type="button"
-              onClick={() => setShowOnlyFlagged((prev) => !prev)}
-              aria-pressed={showOnlyFlagged}
-              className={`group h-7 flex items-center gap-1.5 px-2 sm:px-2.5 rounded-md border text-[11px] font-medium transition-all duration-150 cursor-pointer shadow-2xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D08B6B]/50 focus-visible:ring-offset-1 focus-visible:ring-offset-[#F4EFE6] ${
-                showOnlyFlagged
-                  ? "bg-[#FDF0EB] border-[#D08B6B] text-[#9A5137] shadow-xs"
-                  : "bg-[#FFFCF7] hover:bg-[#FDF2EE] border-[#E3CEBF] hover:border-[#D08B6B] text-[#865947] hover:text-[#5E3626]"
+              onClick={() => onToggleFlagConversation(conversationId)}
+              aria-pressed={isConversationFlagged}
+              className={`group h-7 flex items-center gap-1.5 px-2 sm:px-2.5 rounded-md border text-[11px] font-medium transition-all duration-150 cursor-pointer shadow-2xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C06A49]/50 focus-visible:ring-offset-1 focus-visible:ring-offset-[#F4EFE6] ${
+                isConversationFlagged
+                  ? "bg-[#FFF2EC] border-[#DE9E87] text-[#A84B2E] shadow-xs hover:bg-[#FBE8DF]"
+                  : "bg-[#FFFCF7] hover:bg-[#F2ECE2] border-[#D8CFC2] hover:border-[#DE9E87]/80 text-[#6B6258] hover:text-[#A84B2E]"
               }`}
               title={
-                showOnlyFlagged
-                  ? "Show all conversation messages"
-                  : `Show flagged messages only (${flaggedCount})`
+                isConversationFlagged
+                  ? "Unflag this conversation"
+                  : "Flag this conversation"
               }
               aria-label={
-                showOnlyFlagged
-                  ? "Show all conversation messages"
-                  : `Show flagged messages only (${flaggedCount})`
+                isConversationFlagged
+                  ? "Unflag this conversation"
+                  : "Flag this conversation"
               }
             >
               <Flag
                 className={`w-3 h-3 ${
-                  showOnlyFlagged
-                    ? "fill-[#D08B6B] text-[#D08B6B]"
-                    : "text-[#B36E52] group-hover:text-[#9A5137]"
+                  isConversationFlagged
+                    ? "fill-current text-[#C06A49]"
+                    : "text-[#8E867B] group-hover:text-[#C06A49]"
                 }`}
               />
-              <span className="tabular-nums font-semibold">{flaggedCount}</span>
-              <span className="hidden md:inline">
-                {showOnlyFlagged ? "Flagged Only" : "Flagged"}
+              <span className="hidden xs:inline">
+                {isConversationFlagged ? "Flagged" : "Flag"}
               </span>
             </button>
           )}
@@ -856,6 +860,32 @@ export function ChatArea({
           </div>
         </div>
       </header>
+
+      {/* Flagged Conversation Banner Notification */}
+      {isConversationFlagged && (
+        <div className="bg-[#FFF8F4] border-b border-[#EAD7CD] px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs text-[#9B4527] shrink-0 shadow-2xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-5 h-5 rounded-md bg-[#FCE6DC] border border-[#DE9E87]/50 flex items-center justify-center text-[#C06A49] shrink-0">
+              <Flag className="w-3 h-3 fill-current" />
+            </span>
+            <span className="font-semibold text-[11.5px] text-[#863B20] shrink-0">
+              Flagged Conversation
+            </span>
+            <span className="hidden sm:inline text-[11px] text-[#9E6E5C] truncate">
+              Pinned and visually highlighted in your conversation list.
+            </span>
+          </div>
+          {onToggleFlagConversation && conversationId && (
+            <button
+              type="button"
+              onClick={() => onToggleFlagConversation(conversationId)}
+              className="text-[11px] text-[#A84B2E] hover:text-[#7A321A] underline font-medium cursor-pointer shrink-0 ml-2"
+            >
+              Unflag
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Main Messages Scroll Area - Ivory Canvas #F8F5EF */}
       <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-6 space-y-6">
@@ -1032,73 +1062,32 @@ export function ChatArea({
         ) : (
           /* Message List */
           <div className={`${contentWidthClass} space-y-4`}>
-            {/* Flagged filter banner */}
-            {showOnlyFlagged && (
-              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#FAF0EB] border border-[#E3CEBF] text-xs text-[#865947] shadow-2xs">
-                <div className="flex items-center gap-1.5">
-                  <Flag className="w-3.5 h-3.5 fill-[#D08B6B] text-[#D08B6B] shrink-0" />
-                  <span className="font-medium">
-                    Showing {displayedMessages.length} flagged {displayedMessages.length === 1 ? "message" : "messages"}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowOnlyFlagged(false)}
-                  className="text-[11px] underline hover:text-[#5E3626] font-medium cursor-pointer"
-                >
-                  Show all
-                </button>
-              </div>
-            )}
+            {messages.map((message, index) => {
+              const isUser = message.role === "user";
+              const isLastMessage = index === messages.length - 1;
 
-            {showOnlyFlagged && displayedMessages.length === 0 ? (
-              <div className="text-center py-10 px-4 rounded-xl border border-dashed border-[#E3CEBF] bg-[#FAF0EB]/60">
-                <Flag className="w-6 h-6 mx-auto mb-2 text-[#D08B6B]/70" />
-                <p className="text-xs font-medium text-[#865947]">No flagged messages in this conversation</p>
-                <p className="text-[11px] text-[#A67E6F] mt-1 mb-3">
-                  Click the flag icon on any message to pin it here.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setShowOnlyFlagged(false)}
-                  className="text-xs px-3 py-1 rounded-md bg-[#D08B6B] text-white hover:bg-[#B87052] font-medium cursor-pointer"
+              return (
+                <div
+                  key={message.id || index}
+                  className={`flex gap-3 text-sm ${
+                    isUser ? "justify-end" : "justify-start"
+                  }`}
                 >
-                  Show all messages
-                </button>
-              </div>
-            ) : (
-              displayedMessages.map((message, index) => {
-                const isUser = message.role === "user";
-                const isLastMessage = index === displayedMessages.length - 1;
+                  {!isUser && (
+                    <div className="w-7 h-7 rounded-md bg-[#FFFCF7] border border-[#D8CFC2] flex items-center justify-center shrink-0 mt-0.5 text-[#536E59] shadow-xs">
+                      <Bot className="w-4 h-4" />
+                    </div>
+                  )}
 
-                return (
                   <div
-                    key={message.id || index}
-                    className={`flex gap-3 text-sm ${
-                      isUser ? "justify-end" : "justify-start"
+                    className={`rounded-xl px-4 py-3.5 border transition-all duration-150 ${
+                      isUser
+                        ? "max-w-[88%] sm:max-w-[80%] lg:max-w-[75%] bg-[#FFFCF7] border-[#D8CFC2] text-[#302D29] shadow-xs"
+                        : message.isError
+                        ? "flex-1 min-w-0 bg-[#F5ECE8] border-[#A4715E] text-[#A4715E]"
+                        : "flex-1 min-w-0 bg-[#EDE7DC] border-[#D8CFC2] text-[#302D29] shadow-xs"
                     }`}
                   >
-                    {!isUser && (
-                      <div className="w-7 h-7 rounded-md bg-[#FFFCF7] border border-[#D8CFC2] flex items-center justify-center shrink-0 mt-0.5 text-[#536E59] shadow-xs">
-                        <Bot className="w-4 h-4" />
-                      </div>
-                    )}
-
-                    <div
-                      className={`rounded-xl px-4 py-3.5 border transition-all duration-150 ${
-                        isUser
-                          ? message.isFlagged
-                            ? "max-w-[88%] sm:max-w-[80%] lg:max-w-[75%] bg-[#FFFDF9] border-[#D69D83] text-[#302D29] shadow-[0_2px_8px_rgba(208,139,107,0.12)] ring-1 ring-[#D08B6B]/30 relative before:absolute before:right-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-l-full before:bg-[#D08B6B]"
-                            : "max-w-[88%] sm:max-w-[80%] lg:max-w-[75%] bg-[#FFFCF7] border-[#D8CFC2] text-[#302D29] shadow-xs"
-                          : message.isError
-                          ? message.isFlagged
-                            ? "flex-1 min-w-0 bg-[#F5ECE8] border-[#A4715E] text-[#A4715E] ring-1 ring-[#D08B6B]/30 relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-[#D08B6B]"
-                            : "flex-1 min-w-0 bg-[#F5ECE8] border-[#A4715E] text-[#A4715E]"
-                          : message.isFlagged
-                          ? "flex-1 min-w-0 bg-[#F4EDE2] border-[#D69D83] text-[#302D29] shadow-[0_2px_8px_rgba(208,139,107,0.12)] ring-1 ring-[#D08B6B]/30 relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-[#D08B6B]"
-                          : "flex-1 min-w-0 bg-[#EDE7DC] border-[#D8CFC2] text-[#302D29] shadow-xs"
-                      }`}
-                    >
                       {/* Assistant Message Model Attribution Badge */}
                       {!isUser && (
                         <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-[#D8CFC2] text-[11px] text-[#625D55] flex-wrap">
@@ -1123,12 +1112,6 @@ export function ChatArea({
                             <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-[#E4DDD2] text-[#536E59] border border-[#536E59]/30 font-medium">
                               <Languages className="w-2.5 h-2.5 text-[#536E59]" />
                               <span>{message.translation.sourceName} → {message.translation.targetName}</span>
-                            </span>
-                          )}
-                          {message.isFlagged && (
-                            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-[#FDF0EB] text-[#9A5137] border border-[#D08B6B]/30 font-medium">
-                              <Flag className="w-2.5 h-2.5 fill-current" />
-                              <span>Flagged</span>
                             </span>
                           )}
                           {message.modelProvider && (
@@ -1244,16 +1227,8 @@ export function ChatArea({
                           {message.content}
                         </p>
 
-                        {/* User Prompt Footer: Timestamp + Flag + Edit Query + Copy Button */}
-                        <div className="mt-2.5 flex items-center justify-between gap-1 text-xs select-none">
-                          <div className="flex items-center gap-1.5">
-                            {message.isFlagged && (
-                              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-[#FDF0EB] text-[#9A5137] border border-[#D08B6B]/30 font-medium">
-                                <Flag className="w-2.5 h-2.5 fill-current" />
-                                <span>Flagged</span>
-                              </span>
-                            )}
-                          </div>
+                        {/* User Prompt Footer: Timestamp + Edit Query + Copy Button */}
+                        <div className="mt-2.5 flex items-center justify-end gap-1 text-xs select-none">
 
                           <div className="flex items-center gap-1">
                             <span className="text-[11px] text-[#787167] font-normal tabular-nums leading-none tracking-tight mr-1 h-6 inline-flex items-center">
@@ -1264,35 +1239,6 @@ export function ChatArea({
                             </span>
 
                             <div className="flex items-center gap-0.5">
-                              {/* Flag Toggle Button */}
-                              {onToggleFlagMessage && (
-                                <div className="relative group/tooltip flex items-center">
-                                  <button
-                                    type="button"
-                                    onClick={() => onToggleFlagMessage(message.id)}
-                                    className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
-                                      message.isFlagged
-                                        ? "text-[#C06A49] bg-[#FDF0EB] hover:bg-[#F9DFD5]"
-                                        : "text-[#716B62] hover:text-[#302D29] hover:bg-[#F0E9DE]"
-                                    }`}
-                                    title={message.isFlagged ? "Unflag message" : "Flag message"}
-                                    aria-label={message.isFlagged ? "Unflag message" : "Flag message"}
-                                  >
-                                    <Flag
-                                      className={`w-3.5 h-3.5 ${
-                                        message.isFlagged ? "fill-current" : ""
-                                      }`}
-                                      strokeWidth={1.8}
-                                    />
-                                  </button>
-                                  {/* Hover Tooltip */}
-                                  <div className="pointer-events-none absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#2D2A26] text-[#FFFCF7] text-[10px] font-medium whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150 shadow-md z-30">
-                                    {message.isFlagged ? "Unflag message" : "Flag message"}
-                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#2D2A26]" />
-                                  </div>
-                                </div>
-                              )}
-
                               {/* Edit Query Button */}
                               <div className="relative group/tooltip flex items-center">
                                 <button
@@ -1503,30 +1449,6 @@ export function ChatArea({
                           })}
                         </span>
                         <div className="flex items-center gap-1.5">
-                          {/* Flag Button */}
-                          {onToggleFlagMessage && (
-                            <button
-                              type="button"
-                              onClick={() => onToggleFlagMessage(message.id)}
-                              className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded transition cursor-pointer ${
-                                message.isFlagged
-                                  ? "bg-[#FDF0EB] text-[#C06A49] hover:bg-[#F9DFD5] font-medium border border-[#D08B6B]/30"
-                                  : "hover:bg-[#F0E9DE] text-[#625D55] hover:text-[#302D29]"
-                              }`}
-                              title={message.isFlagged ? "Unflag response" : "Flag response"}
-                              aria-label={message.isFlagged ? "Unflag response" : "Flag response"}
-                            >
-                              <Flag
-                                className={`w-3 h-3 ${
-                                  message.isFlagged
-                                    ? "fill-current text-[#C06A49]"
-                                    : "text-[#716B62]"
-                                }`}
-                              />
-                              <span>{message.isFlagged ? "Flagged" : "Flag"}</span>
-                            </button>
-                          )}
-
                           <button
                             type="button"
                             onClick={() => handleCopyMessage(message.content, message.id)}
@@ -1568,8 +1490,7 @@ export function ChatArea({
                   )}
                 </div>
               );
-            })
-          )}
+            })}
             <div ref={messagesEndRef} />
           </div>
         )}

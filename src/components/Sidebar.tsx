@@ -23,6 +23,7 @@ interface SidebarProps {
   onNewChat: () => void;
   onDeleteConversation: (id: string) => void;
   onRenameConversation: (id: string, newTitle: string) => void;
+  onToggleFlagConversation?: (id: string) => void;
   onLogout: () => void;
   isOpen: boolean;
   onToggleOpen: () => void;
@@ -52,6 +53,7 @@ export function Sidebar({
   onNewChat,
   onDeleteConversation,
   onRenameConversation,
+  onToggleFlagConversation,
   onLogout,
   isOpen,
   onToggleOpen,
@@ -258,7 +260,7 @@ export function Sidebar({
               <div className="flex flex-col items-center gap-1 w-full px-1 py-1.5 overflow-y-auto max-h-[calc(100vh-240px)]">
                 {conversations.slice(0, 15).map((conv) => {
                   const isActive = conv.id === activeConversationId;
-                  const hasFlagged = conv.messages.some((m) => m.isFlagged);
+                  const isFlagged = Boolean(conv.isFlagged);
                   return (
                     <div
                       key={conv.id}
@@ -269,15 +271,23 @@ export function Sidebar({
                         onClick={() => onSelectConversation(conv.id)}
                         className={`w-7.5 h-7.5 rounded-md flex items-center justify-center transition-all cursor-pointer relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 ${
                           isActive
-                            ? "bg-[#FFFCF7] text-[#536E59] font-medium border border-[#D5CDBD] shadow-xs ring-1 ring-[#536E59]/25"
+                            ? isFlagged
+                              ? "bg-[#FFF9F6] text-[#C06A49] font-medium border border-[#DE9E87] shadow-xs ring-1 ring-[#C06A49]/35"
+                              : "bg-[#FFFCF7] text-[#536E59] font-medium border border-[#D5CDBD] shadow-xs ring-1 ring-[#536E59]/25"
+                            : isFlagged
+                            ? "bg-[#FAF3EE] text-[#C06A49] border border-[#E8D2C5] hover:bg-[#F6EBE2]"
                             : "text-[#716B62] hover:bg-[#F0E9DE] hover:text-[#302D29]"
                         }`}
-                        title={`${conv.title}${hasFlagged ? " (Contains flagged messages)" : ""}`}
+                        title={`${conv.title}${isFlagged ? " (Flagged)" : ""}`}
                         aria-label={conv.title}
                       >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        {hasFlagged && (
-                          <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#D08B6B] ring-1 ring-[#FFFCF7]" />
+                        {isFlagged ? (
+                          <Flag className="w-3.5 h-3.5 fill-current text-[#C06A49]" />
+                        ) : (
+                          <MessageSquare className="w-3.5 h-3.5" />
+                        )}
+                        {isFlagged && (
+                          <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#C06A49] ring-1 ring-[#FFFCF7]" />
                         )}
                       </button>
 
@@ -387,13 +397,18 @@ export function Sidebar({
               conversations.map((conv) => {
                 const isActive = conv.id === activeConversationId;
                 const isEditing = editingId === conv.id;
+                const isFlagged = Boolean(conv.isFlagged);
 
                 return (
                   <div
                     key={conv.id}
                     className={`group relative rounded-lg transition-all duration-150 flex items-center justify-between min-h-[38px] ${
                       isActive
-                        ? "bg-[#FFFCF7] text-[#1F1C18] border border-[#DADFD2] shadow-2xs before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[2.5px] before:rounded-r-full before:bg-[#536E59]"
+                        ? isFlagged
+                          ? "bg-[#FFF8F5] text-[#1F1C18] border border-[#DE9E87] shadow-[0_2px_8px_rgba(192,106,73,0.14)] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-r-full before:bg-[#C06A49]"
+                          : "bg-[#FFFCF7] text-[#1F1C18] border border-[#DADFD2] shadow-2xs before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[2.5px] before:rounded-r-full before:bg-[#536E59]"
+                        : isFlagged
+                        ? "bg-[#FAF2ED] text-[#2D231E] border border-[#E7D0C3] hover:bg-[#F6ECE4] hover:border-[#DE9E87] shadow-2xs before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2.5px] before:rounded-r-full before:bg-[#C06A49]/80"
                         : "border border-transparent text-[#5C564E] hover:bg-[#EAE6DD] hover:text-[#1F1C18]"
                     }`}
                   >
@@ -437,25 +452,40 @@ export function Sidebar({
                           {/* Icon Container with refined badge */}
                           <div
                             className={`w-6.5 h-6.5 rounded-md flex items-center justify-center shrink-0 transition-colors ${
-                              isActive
+                              isFlagged
+                                ? "bg-[#FBECE6] text-[#C06A49] border border-[#E8CEC3]"
+                                : isActive
                                 ? "bg-[#E7EFE4] text-[#405B48]"
                                 : "bg-[#EAE6DC] group-hover:bg-[#DDE5D9] text-[#77796F] group-hover:text-[#405B48]"
                             }`}
                           >
-                            <MessageSquare className="w-3.5 h-3.5" />
+                            {isFlagged ? (
+                              <Flag className="w-3.5 h-3.5 fill-current text-[#C06A49]" />
+                            ) : (
+                              <MessageSquare className="w-3.5 h-3.5" />
+                            )}
                           </div>
 
                           {/* Title and metadata */}
                           <div className="flex flex-col min-w-0 flex-1 justify-center">
-                            <span
-                              className={`truncate text-[12px] leading-tight tracking-tight ${
-                                isActive
-                                  ? "font-semibold text-[#1F1C18]"
-                                  : "font-medium text-[#484239] group-hover:text-[#1F1C18]"
-                              }`}
-                            >
-                              {conv.title}
-                            </span>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span
+                                className={`truncate text-[12px] leading-tight tracking-tight ${
+                                  isActive
+                                    ? "font-semibold text-[#1F1C18]"
+                                    : isFlagged
+                                    ? "font-semibold text-[#2D231E]"
+                                    : "font-medium text-[#484239] group-hover:text-[#1F1C18]"
+                                }`}
+                              >
+                                {conv.title}
+                              </span>
+                              {isFlagged && (
+                                <span className="inline-flex items-center text-[9px] font-semibold tracking-wide uppercase px-1 py-0.2 rounded bg-[#F8DDD3] text-[#A84B2E] shrink-0">
+                                  Flagged
+                                </span>
+                              )}
+                            </div>
                             <span className="text-[10px] text-[#89877D] leading-none mt-0.5 truncate flex items-center gap-1.5 font-normal">
                               <span>{formatConversationDate(conv.updatedAt || conv.createdAt)}</span>
                               {conv.messages.length > 0 && (
@@ -466,24 +496,38 @@ export function Sidebar({
                                   </span>
                                 </>
                               )}
-                              {conv.messages.some((m) => m.isFlagged) && (
-                                <>
-                                  <span className="w-0.5 h-0.5 rounded-full bg-[#A3998C]" aria-hidden="true" />
-                                  <span
-                                    className="flex items-center gap-0.5 text-[#C06A49] font-medium"
-                                    title={`${conv.messages.filter((m) => m.isFlagged).length} flagged messages`}
-                                  >
-                                    <Flag className="w-2.5 h-2.5 fill-current" />
-                                    <span>{conv.messages.filter((m) => m.isFlagged).length}</span>
-                                  </span>
-                                </>
-                              )}
                             </span>
                           </div>
                         </button>
 
-                        {/* Action buttons (Rename, Delete) */}
-                        <div className="flex items-center gap-0.5 pr-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0">
+                        {/* Action buttons (Flag, Rename, Delete) */}
+                        <div className={`flex items-center gap-0.5 pr-1 transition-opacity shrink-0 ${
+                          isFlagged
+                            ? "opacity-100"
+                            : "opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                        }`}>
+                          {onToggleFlagConversation && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleFlagConversation(conv.id);
+                              }}
+                              className={`w-5.5 h-5.5 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
+                                isFlagged
+                                  ? "text-[#C06A49] hover:bg-[#F4DCD5]"
+                                  : "hover:bg-[#E8DFD0] text-[#7A7369] hover:text-[#C06A49]"
+                              }`}
+                              title={isFlagged ? "Unflag conversation" : "Flag conversation"}
+                              aria-label={isFlagged ? "Unflag conversation" : "Flag conversation"}
+                            >
+                              <Flag
+                                className={`w-2.5 h-2.5 ${
+                                  isFlagged ? "fill-current text-[#C06A49]" : ""
+                                }`}
+                              />
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={(e) => startRename(conv, e)}

@@ -80,8 +80,6 @@ export interface ChatMessage {
   // Optional translation metadata
   isTranslation?: boolean;
   translation?: TranslationMetadata;
-  // Flagged state for bookmarking/pinning important messages
-  isFlagged?: boolean;
 }
 
 export interface Conversation {
@@ -91,6 +89,8 @@ export interface Conversation {
   updatedAt: number;
   modelId: AllowedModelId;
   messages: ChatMessage[];
+  // Flagged state for starring/pinning the entire conversation
+  isFlagged?: boolean;
 }
 
 export interface ChatRequestBody {
