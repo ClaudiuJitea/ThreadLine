@@ -132,9 +132,43 @@ async function runTests() {
   handleToggleFlag("conv_1");
   assert(conversations.find((c) => c.id === "conv_1")?.isFlagged === false, "handleToggleFlag unflags conv_1");
 
+  // Group 5: Conversation Title Search Filtering
+  console.log("\n--- Group 5: Conversation Title Search Filtering ---");
+
+  function searchConversations(query, list) {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return list;
+    return list.filter((c) => c.title.toLowerCase().includes(normalized));
+  }
+
+  const allChats = [
+    { id: "c1", title: "Project Strategy Meeting", messages: [] },
+    { id: "c2", title: "Casual Discussion", messages: [] },
+    { id: "c3", title: "Architecture Review", messages: [] },
+    { id: "c4", title: "API Key Rotation Checklist", messages: [] },
+  ];
+
+  const emptySearch = searchConversations("", allChats);
+  assert(emptySearch.length === 4, "Empty search query returns all conversations");
+
+  const whitespaceSearch = searchConversations("   ", allChats);
+  assert(whitespaceSearch.length === 4, "Whitespace-only query returns all conversations");
+
+  const strategySearch = searchConversations("strategy", allChats);
+  assert(strategySearch.length === 1 && strategySearch[0].id === "c1", "Case-insensitive title search finds 'Project Strategy Meeting'");
+
+  const uppercaseSearch = searchConversations("REVIEW", allChats);
+  assert(uppercaseSearch.length === 1 && uppercaseSearch[0].id === "c3", "Uppercase query matches 'Architecture Review'");
+
+  const substringSearch = searchConversations("api", allChats);
+  assert(substringSearch.length === 1 && substringSearch[0].id === "c4", "Substring search finds 'API Key Rotation Checklist'");
+
+  const nonMatchingSearch = searchConversations("nonexistent title xyz", allChats);
+  assert(nonMatchingSearch.length === 0, "Non-matching search returns an empty array");
+
   console.log("\n==================================================");
   if (testFailures === 0) {
-    console.log("\x1b[32mAll Conversation Flagging Tests Passed Successfully!\x1b[0m");
+    console.log("\x1b[32mAll Conversation Flagging & Search Tests Passed Successfully!\x1b[0m");
   } else {
     console.error(`\x1b[31m${testFailures} Test(s) Failed!\x1b[0m`);
     process.exit(1);

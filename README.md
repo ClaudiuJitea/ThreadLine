@@ -10,7 +10,7 @@ A private, single-user AI chat interface built with Next.js App Router, React, T
 - **Multiple Models**: Query flagship, high-speed, coding, and image generation models via OpenRouter (GPT-6 Luna, MiMo v2.6 Flash, GLM-5.3 Flash, DeepSeek v4.1 Flash, and Recraft V4.1 Flash).
 - **Dedicated Translation Mode**: A dedicated Translate toggle in the composer powered by Google Gemma 4 26B (`google/gemma-4-26b-a4b-it`). Supports Auto Detect and 29 languages with a quick language swap button. Output is strictly translated text without conversational filler.
 - **Conversation Flagging**: Flag entire conversations to highlight and pin important discussions. Flagged conversations stand out with prominent terracotta accents, a dedicated flag badge, and indicators in both the sidebar list and compact rail.
-- **Compact & Distraction-Free UI**: Streamlined compact top bar, retractable sidebar with quick-access conversation rail, and custom drag-to-resize width.
+- **Conversation Search & Bottom-Anchored Actions**: Dedicated search bar on the sidebar for finding named chats in real time, with the New Conversation button positioned at the bottom of the screen. Includes a retractable conversation rail and custom drag-to-resize width.
 - **Mid-Chat Model Switching**: Switch models mid-conversation with per-message model attribution.
 - **Web Search**: Real-time search integration with Tavily, providing inline citations and source previews.
 - **Image Generation**: Generate images with Recraft V4.1 Flash supporting multiple aspect ratios.
@@ -87,7 +87,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### 4. Run Test Suites
 
 ```bash
-npm run test:flagging     # Run conversation flagging test suite
+npm run test:flagging     # Run conversation flagging & search test suite
 npm run test:translation  # Run translation test suite
 npm run test:web-search    # Run web search & regression test suite
 ```

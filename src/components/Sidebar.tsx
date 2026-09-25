@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Conversation } from "@/lib/types";
 import {
   Plus,
@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   HardDrive,
   Flag,
+  Search,
 } from "lucide-react";
 import { ThreadLineLogo } from "./ThreadLineLogo";
 
@@ -60,6 +61,20 @@ export function Sidebar({
 }: SidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredConversations = normalizedQuery
+    ? conversations.filter((c) =>
+        c.title.toLowerCase().includes(normalizedQuery)
+      )
+    : conversations;
+
+  const handleNewChat = () => {
+    setSearchQuery("");
+    onNewChat();
+  };
 
   // Resizable sidebar width state with localStorage persistence
   const [width, setWidth] = useState<number>(() => {
@@ -242,15 +257,18 @@ export function Sidebar({
                 </button>
               </div>
 
-              {/* New Chat Primary Action Button */}
+              {/* Search shortcut button in rail view */}
               <button
                 type="button"
-                onClick={onNewChat}
-                className="w-7 h-7 rounded-md bg-[#536E59] hover:bg-[#405845] text-[#FFFCF7] flex items-center justify-center shadow-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50 active:scale-95 shrink-0 mt-0.5"
-                title="New conversation"
-                aria-label="New conversation"
+                onClick={() => {
+                  onToggleOpen();
+                  setTimeout(() => searchInputRef.current?.focus(), 150);
+                }}
+                className="w-7 h-7 rounded-md hover:bg-[#F0E9DE] text-[#716B62] hover:text-[#302D29] flex items-center justify-center transition-colors cursor-pointer mt-0.5"
+                title="Search conversations"
+                aria-label="Search conversations"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Search className="w-3.5 h-3.5" />
               </button>
 
               {/* Subtle Divider */}
@@ -312,6 +330,17 @@ export function Sidebar({
 
             {/* Bottom section */}
             <div className="flex flex-col items-center gap-1.5 w-full pt-1.5 border-t border-[#D8CFC2]/75 mt-auto pb-1">
+              {/* New Conversation Button at the bottom of the rail */}
+              <button
+                type="button"
+                onClick={handleNewChat}
+                className="w-7 h-7 rounded-md bg-[#536E59] hover:bg-[#405845] text-[#FFFCF7] flex items-center justify-center shadow-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50 active:scale-95 shrink-0"
+                title="New conversation"
+                aria-label="New conversation"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+
               <div
                 className="w-7 h-7 rounded-md flex items-center justify-center text-[#536E59] hover:bg-[#F0E9DE] cursor-help transition-colors"
                 title="Local Browser Storage: Chat history is saved solely on this device."
@@ -366,23 +395,49 @@ export function Sidebar({
             </button>
           </div>
 
-          {/* Primary action */}
-          <div className="px-2.5 py-2 shrink-0">
-            <button
-              type="button"
-              onClick={onNewChat}
-              className="w-full h-8.5 flex items-center justify-start gap-2.5 px-3 rounded-lg bg-[#405B48] hover:bg-[#334B3B] text-[#FFFCF7] font-medium text-[12px] transition duration-150 cursor-pointer shadow-[0_2px_5px_rgba(47,71,53,0.12)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50"
-            >
-              <Plus className="w-3.5 h-3.5" strokeWidth={2.2} />
-              <span>New Conversation</span>
-            </button>
+          {/* Search conversations */}
+          <div className="px-2.5 pt-2 pb-1.5 shrink-0">
+            <div className="relative flex items-center">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 text-[#88877C] pointer-events-none" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setSearchQuery("");
+                  }
+                }}
+                placeholder="Search conversations..."
+                className="w-full h-8 pl-8 pr-7 bg-[#FFFCF7] border border-[#D8CFC2] focus:border-[#536E59] rounded-lg text-[12px] text-[#2D2A26] placeholder-[#8E8A81] focus:outline-none focus:ring-1 focus:ring-[#536E59]/40 transition-colors shadow-2xs"
+                aria-label="Search conversations"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-1.5 p-1 rounded-md hover:bg-[#EAE6DD] text-[#88877C] hover:text-[#2D2A26] cursor-pointer transition-colors"
+                  title="Clear search"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Conversation List */}
           <div className="flex-1 min-h-0 overflow-y-auto px-2.5 pb-2">
             <div className="flex items-center justify-between px-1.5 mb-1.5">
-              <span className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[#88877C]">Recent</span>
-              <span className="text-[9.5px] tabular-nums text-[#929085]">{conversations.length}</span>
+              <span className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[#88877C]">
+                {normalizedQuery ? "Search Results" : "Recent"}
+              </span>
+              <span className="text-[9.5px] tabular-nums text-[#929085]">
+                {normalizedQuery
+                  ? `${filteredConversations.length} of ${conversations.length}`
+                  : conversations.length}
+              </span>
             </div>
             <div className="space-y-1">
             {conversations.length === 0 ? (
@@ -393,8 +448,23 @@ export function Sidebar({
                   Your conversations will appear here.
                 </p>
               </div>
+            ) : filteredConversations.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[#D7D0C4] bg-[#FAF7F1]/65 text-center py-6 px-3 text-xs text-[#625D55]">
+                <Search className="w-4.5 h-4.5 mx-auto mb-1.5 text-[#8B9D8C]" />
+                <p className="font-medium text-[#34382F] text-[11.5px]">No matches found</p>
+                <p className="text-[10.5px] mt-0.5 text-[#7A786F]">
+                  No conversation titled &ldquo;{searchQuery}&rdquo;
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="mt-2 text-[11px] font-medium text-[#536E59] hover:underline cursor-pointer"
+                >
+                  Clear search
+                </button>
+              </div>
             ) : (
-              conversations.map((conv) => {
+              filteredConversations.map((conv) => {
                 const isActive = conv.id === activeConversationId;
                 const isEditing = editingId === conv.id;
                 const isFlagged = Boolean(conv.isFlagged);
@@ -556,26 +626,36 @@ export function Sidebar({
             </div>
           </div>
 
-          {/* Workspace footer */}
-          <div className="px-2.5 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] border-t border-[#E0D9CD] shrink-0 flex flex-col gap-1">
-            <div className="flex items-center justify-between px-1.5 py-0.5 text-[10px] text-[#7A786F]">
-              <span className="flex items-center gap-1.5">
-                <HardDrive className="w-3 h-3 text-[#536E59]" />
-                <span className="font-medium text-[#4C594B]">Local storage</span>
-              </span>
-              <span className="text-[9.5px] text-[#96948A]">Private</span>
-            </div>
+          {/* Workspace footer with New Conversation moved to the bottom */}
+          <div className="px-2.5 py-2.5 pb-[calc(0.6rem+env(safe-area-inset-bottom,0px))] border-t border-[#E0D9CD] bg-[#F7F4EE] shrink-0 flex flex-col gap-2">
+            {/* Primary Action Button properly aligned at the bottom */}
             <button
               type="button"
-              onClick={onLogout}
-              className="w-full flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-[#EAE6DD] text-[#6F7167] hover:text-[#302D29] text-[11px] transition duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40"
+              onClick={handleNewChat}
+              className="w-full h-8.5 flex items-center justify-center gap-2 px-3 rounded-lg bg-[#405B48] hover:bg-[#334B3B] text-[#FFFCF7] font-medium text-[12px] transition duration-150 cursor-pointer shadow-[0_2px_5px_rgba(47,71,53,0.12)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50"
             >
-              <span className="flex items-center gap-1.5">
-                <LogOut className="w-3 h-3" />
-                Sign Out
-              </span>
-              <span className="text-[9.5px] text-[#96948A]">Owner</span>
+              <Plus className="w-3.5 h-3.5" strokeWidth={2.2} />
+              <span>New Conversation</span>
             </button>
+
+            {/* Storage status & Sign out row */}
+            <div className="flex items-center justify-between px-1.5 py-0.5 text-[10px] text-[#7A786F]">
+              <span className="flex items-center gap-1.5 select-none" title="Local Browser Storage: Chat history is saved solely on this device.">
+                <HardDrive className="w-3 h-3 text-[#536E59]" />
+                <span className="font-medium text-[#4C594B]">Local storage</span>
+                <span className="text-[9.5px] text-[#96948A]">• Private</span>
+              </span>
+              <button
+                type="button"
+                onClick={onLogout}
+                className="flex items-center gap-1 text-[#6F7167] hover:text-[#A4715E] transition-colors cursor-pointer text-[10.5px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#536E59]"
+                title="Sign Out (Owner)"
+                aria-label="Sign Out"
+              >
+                <LogOut className="w-2.5 h-2.5" />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
