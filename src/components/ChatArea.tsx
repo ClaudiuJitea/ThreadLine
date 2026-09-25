@@ -725,10 +725,10 @@ export function ChatArea({
 
       {/* Top Navigation Bar - Refined Compact Layer */}
       <header
-        className={`h-11 border-b px-3 sm:px-4 flex items-center justify-between z-20 shrink-0 shadow-[0_1px_2px_rgba(48,45,41,0.02)] transition-colors duration-150 ${
+        className={`h-11 border-b px-3 sm:px-4 flex items-center justify-between z-20 shrink-0 transition-colors duration-150 ${
           isConversationFlagged
-            ? "border-[#E4D1C6] bg-[#F7EFE9]"
-            : "border-[#D8CFC2]/75 bg-[#F4EFE6]"
+            ? "border-[#DEBAAB] bg-[#FAF2ED] shadow-[0_1px_3px_rgba(192,106,73,0.04),inset_0_-1px_0_0_rgba(255,255,255,0.8)]"
+            : "border-[#D6CEC1] bg-[#FAF7F2]/95 backdrop-blur-xs shadow-[0_1px_3px_rgba(40,36,30,0.03),inset_0_-1px_0_0_rgba(255,255,255,0.8)]"
         }`}
       >
         <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">

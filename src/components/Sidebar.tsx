@@ -188,7 +188,7 @@ export function Sidebar({
           "--sidebar-width": `${width}px`,
           "--current-sidebar-width": isOpen ? `${width}px` : "46px",
         } as React.CSSProperties}
-        className={`fixed top-0 bottom-0 left-0 z-40 bg-[#F3EFE7] border-r border-[#DDD5C9] flex flex-col shrink-0 select-none h-[100dvh] max-h-[100dvh] ${
+        className={`fixed top-0 bottom-0 left-0 z-40 bg-[#F1EBE2] border-r border-[#D6CEC1] shadow-[1px_0_0_0_rgba(255,255,255,0.7)] flex flex-col shrink-0 select-none h-[100dvh] max-h-[100dvh] ${
           isResizing
             ? "transition-none"
             : "transition-[width,transform] duration-300 ease-in-out"
@@ -221,7 +221,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={onToggleOpen}
-          className="hidden lg:flex absolute -right-2.5 top-1/2 -translate-y-1/2 z-50 w-5 h-9 rounded-full bg-[#FFFCF7] hover:bg-[#F2ECE2] border border-[#D8CFC2] hover:border-[#536E59] shadow-[0_1px_4px_rgba(48,45,41,0.06),0_1px_2px_rgba(48,45,41,0.04)] hover:shadow-[0_3px_10px_rgba(83,110,89,0.18)] items-center justify-center text-[#536E59] transition-all duration-150 cursor-pointer active:scale-95 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[#EDE7DC]"
+          className="hidden lg:flex absolute -right-2.5 top-1/2 -translate-y-1/2 z-50 w-5 h-9 rounded-full bg-[#FFFCF7] hover:bg-[#F2ECE2] border border-[#D6CEC1] hover:border-[#536E59] shadow-[0_1px_4px_rgba(48,45,41,0.06),0_1px_2px_rgba(48,45,41,0.04)] hover:shadow-[0_3px_10px_rgba(83,110,89,0.18)] items-center justify-center text-[#536E59] transition-all duration-150 cursor-pointer active:scale-95 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[#EDE7DC]"
           title={isOpen ? "Hide sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)"}
           aria-label={isOpen ? "Hide sidebar" : "Expand sidebar"}
         >
@@ -245,7 +245,7 @@ export function Sidebar({
             {/* Top section */}
             <div className="flex flex-col items-center gap-1.5 w-full">
               {/* Header row (h-11 alignment with ChatArea header) */}
-              <div className="h-11 flex items-center justify-center border-b border-[#D8CFC2]/75 w-full shrink-0 -mt-2">
+              <div className="h-11 flex items-center justify-center border-b border-[#D6CEC1] bg-[#ECE5DB]/80 w-full shrink-0 -mt-2 shadow-[inset_0_-1px_0_0_rgba(255,255,255,0.5)]">
                 <button
                   type="button"
                   onClick={onToggleOpen}
@@ -315,7 +315,7 @@ export function Sidebar({
             </div>
 
             {/* Bottom section */}
-            <div className="flex flex-col items-center gap-1.5 w-full pt-1.5 border-t border-[#D8CFC2]/75 mt-auto pb-1">
+            <div className="flex flex-col items-center gap-1.5 w-full pt-1.5 border-t border-[#D6CEC1] bg-[#ECE6DC]/85 mt-auto pb-1">
               {/* Search shortcut button in rail view */}
               <button
                 type="button"
@@ -368,7 +368,7 @@ export function Sidebar({
             }`}
           >
           {/* Header aligned with the conversation header */}
-          <div className="h-11 px-3 border-b border-[#E4DDD3] flex items-center justify-between gap-2 shrink-0">
+          <div className="h-11 px-3.5 border-b border-[#D6CEC1] bg-[#ECE5DB]/80 backdrop-blur-xs flex items-center justify-between gap-2 shrink-0 shadow-[inset_0_-1px_0_0_rgba(255,255,255,0.5)]">
             <div className="flex items-center gap-2.5 min-w-0 select-none">
               <div className="w-7 h-7 rounded-lg bg-[#344D3C] flex items-center justify-center text-[#F8F5EF] shadow-2xs shrink-0">
                 <ThreadLineLogo className="w-3.5 h-3.5" />
@@ -396,12 +396,12 @@ export function Sidebar({
           </div>
 
           {/* Conversation List */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-2.5 pt-2.5 pb-2">
-            <div className="flex items-center justify-between px-1.5 mb-1.5">
-              <span className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[#88877C]">
+          <div className="flex-1 min-h-0 overflow-y-auto px-2.5 pt-2 pb-2">
+            <div className="flex items-center justify-between px-1.5 py-1 mb-1.5 text-[10px]">
+              <span className="font-semibold uppercase tracking-[0.11em] text-[#7A7469]">
                 {normalizedQuery ? "Search Results" : "Recent"}
               </span>
-              <span className="text-[9.5px] tabular-nums text-[#929085]">
+              <span className="font-mono text-[9.5px] font-medium text-[#706A5F] bg-[#E3DBD0] border border-[#D5CDC0]/80 px-1.5 py-0.5 rounded-full tabular-nums leading-none">
                 {normalizedQuery
                   ? `${filteredConversations.length} of ${conversations.length}`
                   : conversations.length}
@@ -590,7 +590,7 @@ export function Sidebar({
           </div>
 
           {/* Workspace footer with Search and New Conversation moved to the bottom */}
-          <div className="px-2.5 py-2.5 pb-[calc(0.6rem+env(safe-area-inset-bottom,0px))] border-t border-[#E0D9CD] bg-[#F7F4EE] shrink-0 flex flex-col gap-2">
+          <div className="px-2.5 py-2.5 pb-[calc(0.6rem+env(safe-area-inset-bottom,0px))] border-t border-[#D6CEC1] bg-[#ECE6DC]/90 backdrop-blur-xs shrink-0 flex flex-col gap-2 shadow-[0_-1px_3px_rgba(40,36,30,0.02)]">
             {/* Search conversations */}
             <div className="relative flex items-center">
               <Search className="w-3.5 h-3.5 absolute left-2.5 text-[#88877C] pointer-events-none" />
