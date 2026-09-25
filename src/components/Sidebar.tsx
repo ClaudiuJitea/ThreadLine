@@ -412,7 +412,7 @@ export function Sidebar({
 
             {/* Search chats directly under New chat */}
             <div className="relative flex items-center">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 text-[#88877C] pointer-events-none" />
+              <Search className="w-3.5 h-3.5 absolute left-3 text-[#88877C] pointer-events-none" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -424,14 +424,14 @@ export function Sidebar({
                   }
                 }}
                 placeholder="Search chats"
-                className="w-full h-8 pl-8 pr-7 bg-[#FFFCF7] border border-[#D8CFC2] focus:border-[#536E59] rounded-lg text-[12px] text-[#2D2A26] placeholder-[#8E8A81] focus:outline-none focus:ring-1 focus:ring-[#536E59]/40 transition-colors shadow-2xs"
+                className="w-full h-8.5 pl-8.5 pr-8 bg-[#FFFCF7] border border-[#D8CFC2] focus:border-[#536E59] rounded-full text-[12px] text-[#2D2A26] placeholder-[#8E8A81] focus:outline-none focus:ring-1 focus:ring-[#536E59]/40 transition-colors shadow-2xs"
                 aria-label="Search chats"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-1.5 p-1 rounded-md hover:bg-[#EAE6DD] text-[#88877C] hover:text-[#2D2A26] cursor-pointer transition-colors"
+                  className="absolute right-2 p-1 rounded-full hover:bg-[#EAE6DD] text-[#88877C] hover:text-[#2D2A26] cursor-pointer transition-colors"
                   title="Clear search"
                   aria-label="Clear search"
                 >
