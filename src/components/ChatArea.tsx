@@ -716,32 +716,32 @@ export function ChatArea({
         </button>
       )}
 
-      {/* Top Navigation Bar - Refined Middle Layer */}
-      <header className="h-14 border-b border-[#D8CFC2]/75 bg-[#F4EFE6] px-3 sm:px-5 flex items-center justify-between z-20 shrink-0 shadow-[0_1px_2px_rgba(48,45,41,0.02)]">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      {/* Top Navigation Bar - Refined Compact Layer */}
+      <header className="h-11 border-b border-[#D8CFC2]/75 bg-[#F4EFE6] px-3 sm:px-4 flex items-center justify-between z-20 shrink-0 shadow-[0_1px_2px_rgba(48,45,41,0.02)]">
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
           {/* Mobile Sidebar Toggle Button */}
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="flex lg:hidden w-8 h-8 rounded-lg bg-[#FFFCF7] hover:bg-[#EDE7DC] border border-[#D8CFC2] hover:border-[#536E59]/50 items-center justify-center text-[#536E59] shadow-2xs cursor-pointer active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40"
+            className="flex lg:hidden w-7 h-7 rounded-md bg-[#FFFCF7] hover:bg-[#EDE7DC] border border-[#D8CFC2] hover:border-[#536E59]/50 items-center justify-center text-[#536E59] shadow-2xs cursor-pointer active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40"
             title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
             aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
           >
-            <PanelLeft className="w-4 h-4" />
+            <PanelLeft className="w-3.5 h-3.5" />
           </button>
 
-          <div className="flex flex-col justify-center min-w-0 py-0.5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 min-w-0 py-0.5">
             <h2
-              className="text-[13px] sm:text-[13.5px] font-semibold text-[#2D2A26] tracking-tight leading-snug truncate max-w-[150px] xs:max-w-[200px] sm:max-w-sm md:max-w-md lg:max-w-lg"
+              className="text-[12.5px] sm:text-[13px] font-semibold text-[#2D2A26] tracking-tight leading-none truncate max-w-[130px] xs:max-w-[180px] sm:max-w-xs md:max-w-sm lg:max-w-md"
               title={conversationTitle || "New Conversation"}
             >
               {conversationTitle || "New Conversation"}
             </h2>
-            <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-[#716B62] leading-none min-w-0">
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-[#716B62] leading-none min-w-0 mt-0.5 sm:mt-0">
+              <span className="hidden sm:inline text-[#C7BFB2]">•</span>
               <span className="w-1.5 h-1.5 rounded-full bg-[#536E59] shrink-0" aria-hidden="true" />
-              <span className="text-[10px] sm:text-[10.5px] text-[#787167] shrink-0 font-normal">Active model:</span>
               <span
-                className="font-medium text-[#465E4C] truncate max-w-[120px] xs:max-w-[160px] sm:max-w-[240px]"
+                className="font-medium text-[#465E4C] truncate max-w-[110px] xs:max-w-[150px] sm:max-w-[200px]"
                 title={activeModel.name}
               >
                 {activeModel.name}
@@ -756,11 +756,11 @@ export function ChatArea({
             <button
               type="button"
               onClick={onNewChat}
-              className="flex lg:hidden h-8 items-center gap-1 px-2.5 rounded-lg bg-[#536E59] hover:bg-[#405845] text-[#FFFCF7] text-[11.5px] font-medium transition-all duration-150 cursor-pointer shadow-xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40"
+              className="flex lg:hidden h-7 items-center gap-1 px-2 rounded-md bg-[#536E59] hover:bg-[#405845] text-[#FFFCF7] text-[11px] font-medium transition-all duration-150 cursor-pointer shadow-xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40"
               title="New Conversation"
               aria-label="New Conversation"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3 h-3" />
               <span className="hidden xs:inline">New</span>
             </button>
           )}
@@ -770,7 +770,7 @@ export function ChatArea({
             type="button"
             onClick={toggleWideLayout}
             aria-pressed={isWideLayout}
-            className={`group h-8 flex items-center gap-1.5 px-2.5 sm:px-3 rounded-lg border text-[11.5px] font-medium transition-all duration-150 cursor-pointer shadow-2xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50 focus-visible:ring-offset-1 focus-visible:ring-offset-[#F4EFE6] ${
+            className={`group h-7 flex items-center gap-1.5 px-2 sm:px-2.5 rounded-md border text-[11px] font-medium transition-all duration-150 cursor-pointer shadow-2xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50 focus-visible:ring-offset-1 focus-visible:ring-offset-[#F4EFE6] ${
               isWideLayout
                 ? "bg-[#EDF3EB] border-[#536E59]/40 text-[#405845] hover:bg-[#E3ECE0] shadow-xs"
                 : "bg-[#FFFCF7] hover:bg-[#EDE7DC] border-[#D8CFC2] hover:border-[#536E59]/40 text-[#5C564E] hover:text-[#2B2824]"
@@ -780,26 +780,26 @@ export function ChatArea({
           >
             {isWideLayout ? (
               <>
-                <Minimize2 className="w-3.5 h-3.5 text-[#536E59] transition-transform duration-150 group-hover:scale-105 shrink-0" />
+                <Minimize2 className="w-3 h-3 text-[#536E59] transition-transform duration-150 group-hover:scale-105 shrink-0" />
                 <span className="hidden md:inline">Standard Width</span>
               </>
             ) : (
               <>
-                <Maximize2 className="w-3.5 h-3.5 text-[#536E59] transition-transform duration-150 group-hover:scale-105 shrink-0" />
+                <Maximize2 className="w-3 h-3 text-[#536E59] transition-transform duration-150 group-hover:scale-105 shrink-0" />
                 <span className="hidden md:inline">Full Width</span>
               </>
             )}
           </button>
 
           {/* Subtle Vertical Separator between Action and Status */}
-          <div className="hidden sm:block h-4 w-px bg-[#D8CFC2]/70 mx-0.5" aria-hidden="true" />
+          <div className="hidden sm:block h-3.5 w-px bg-[#D8CFC2]/70 mx-0.5" aria-hidden="true" />
 
           {/* Private Session Status Badge */}
           <div
-            className="hidden sm:flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-lg bg-[#FAF7F2] border border-[#D8CFC2]/80 text-[11px] font-medium text-[#555048] shadow-2xs select-none"
+            className="hidden sm:flex items-center gap-1 h-7 px-2 sm:px-2.5 rounded-md bg-[#FAF7F2] border border-[#D8CFC2]/80 text-[10.5px] font-medium text-[#555048] shadow-2xs select-none"
             title="Private session: chat history is stored locally in your browser, and requests proxy directly to OpenRouter without database logging."
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-[#536E59] shrink-0" />
+            <ShieldCheck className="w-3 h-3 text-[#536E59] shrink-0" />
             <span className="tracking-tight text-[#4F4A42]">Private Session</span>
           </div>
         </div>
