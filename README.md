@@ -22,6 +22,9 @@ A private, single-user AI chat interface built with Next.js App Router, React, T
 ### Code Generation & Syntax Highlighting
 ![Code Generation](images/code.png)
 
+### Text-to-Image Generation
+![Image Generation](images/image.png)
+
 ## Getting Started
 
 ### 1. Clone and Install
