@@ -751,12 +751,6 @@ export function ChatArea({
               >
                 {conversationTitle || "New Conversation"}
               </h2>
-              {isConversationFlagged && (
-                <span className="inline-flex items-center text-[9px] font-semibold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[#F8DDD3] text-[#A84B2E] border border-[#DE9E87]/60 shrink-0">
-                  <Flag className="w-2.5 h-2.5 fill-current mr-0.5" />
-                  Flagged
-                </span>
-              )}
             </div>
             <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-[#716B62] leading-none min-w-0 mt-0.5 sm:mt-0">
               <span className="hidden sm:inline text-[#C7BFB2]">•</span>
@@ -860,32 +854,6 @@ export function ChatArea({
           </div>
         </div>
       </header>
-
-      {/* Flagged Conversation Banner Notification */}
-      {isConversationFlagged && (
-        <div className="bg-[#FFF8F4] border-b border-[#EAD7CD] px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs text-[#9B4527] shrink-0 shadow-2xs">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="w-5 h-5 rounded-md bg-[#FCE6DC] border border-[#DE9E87]/50 flex items-center justify-center text-[#C06A49] shrink-0">
-              <Flag className="w-3 h-3 fill-current" />
-            </span>
-            <span className="font-semibold text-[11.5px] text-[#863B20] shrink-0">
-              Flagged Conversation
-            </span>
-            <span className="hidden sm:inline text-[11px] text-[#9E6E5C] truncate">
-              Pinned and visually highlighted in your conversation list.
-            </span>
-          </div>
-          {onToggleFlagConversation && conversationId && (
-            <button
-              type="button"
-              onClick={() => onToggleFlagConversation(conversationId)}
-              className="text-[11px] text-[#A84B2E] hover:text-[#7A321A] underline font-medium cursor-pointer shrink-0 ml-2"
-            >
-              Unflag
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Main Messages Scroll Area - Ivory Canvas #F8F5EF */}
       <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-6 space-y-6">

@@ -550,11 +550,6 @@ export function Sidebar({
                               >
                                 {conv.title}
                               </span>
-                              {isFlagged && (
-                                <span className="inline-flex items-center text-[9px] font-semibold tracking-wide uppercase px-1 py-0.2 rounded bg-[#F8DDD3] text-[#A84B2E] shrink-0">
-                                  Flagged
-                                </span>
-                              )}
                             </div>
                             <span className="text-[10px] text-[#89877D] leading-none mt-0.5 truncate flex items-center gap-1.5 font-normal">
                               <span>{formatConversationDate(conv.updatedAt || conv.createdAt)}</span>
