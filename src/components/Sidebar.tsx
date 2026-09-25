@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Conversation } from "@/lib/types";
 import {
-  Plus,
   MessageSquare,
+  MessageCirclePlus,
   Trash2,
   Edit2,
   Check,
@@ -330,15 +330,15 @@ export function Sidebar({
                 <Search className="w-3.5 h-3.5" />
               </button>
 
-              {/* New Conversation Button at the bottom of the rail */}
+              {/* New chat button at the bottom of the rail */}
               <button
                 type="button"
                 onClick={handleNewChat}
                 className="w-7 h-7 rounded-md bg-[#536E59] hover:bg-[#405845] text-[#FFFCF7] flex items-center justify-center shadow-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50 active:scale-95 shrink-0"
-                title="New conversation"
-                aria-label="New conversation"
+                title="New chat"
+                aria-label="New chat"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <MessageCirclePlus className="w-3.5 h-3.5" />
               </button>
 
               <div
@@ -625,10 +625,12 @@ export function Sidebar({
             <button
               type="button"
               onClick={handleNewChat}
-              className="w-full h-8.5 flex items-center justify-center gap-2 px-3 rounded-lg bg-[#405B48] hover:bg-[#334B3B] text-[#FFFCF7] font-medium text-[12px] transition duration-150 cursor-pointer shadow-[0_2px_5px_rgba(47,71,53,0.12)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50"
+              className="w-full h-8.5 flex items-center justify-center gap-2 px-3 rounded-full bg-[#405B48] hover:bg-[#334B3B] text-[#FFFCF7] font-medium text-[12.5px] transition duration-150 cursor-pointer shadow-[0_2px_5px_rgba(47,71,53,0.12)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50"
+              title="New chat"
+              aria-label="New chat"
             >
-              <Plus className="w-3.5 h-3.5" strokeWidth={2.2} />
-              <span>New Conversation</span>
+              <MessageCirclePlus className="w-4 h-4" />
+              <span>New chat</span>
             </button>
 
             {/* Storage status & Sign out row */}

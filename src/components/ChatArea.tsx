@@ -772,8 +772,8 @@ export function ChatArea({
               type="button"
               onClick={onNewChat}
               className="flex lg:hidden h-7 items-center gap-1 px-2 rounded-md bg-[#536E59] hover:bg-[#405845] text-[#FFFCF7] text-[11px] font-medium transition-all duration-150 cursor-pointer shadow-xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40"
-              title="New Conversation"
-              aria-label="New Conversation"
+              title="New chat"
+              aria-label="New chat"
             >
               <Plus className="w-3 h-3" />
               <span className="hidden xs:inline">New</span>
