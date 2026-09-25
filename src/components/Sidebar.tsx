@@ -257,20 +257,6 @@ export function Sidebar({
                 </button>
               </div>
 
-              {/* Search shortcut button in rail view */}
-              <button
-                type="button"
-                onClick={() => {
-                  onToggleOpen();
-                  setTimeout(() => searchInputRef.current?.focus(), 150);
-                }}
-                className="w-7 h-7 rounded-md hover:bg-[#F0E9DE] text-[#716B62] hover:text-[#302D29] flex items-center justify-center transition-colors cursor-pointer mt-0.5"
-                title="Search conversations"
-                aria-label="Search conversations"
-              >
-                <Search className="w-3.5 h-3.5" />
-              </button>
-
               {/* Subtle Divider */}
               <div className="w-6 h-px bg-[#D8CFC2]/75 my-0.5" aria-hidden="true" />
 
@@ -330,6 +316,20 @@ export function Sidebar({
 
             {/* Bottom section */}
             <div className="flex flex-col items-center gap-1.5 w-full pt-1.5 border-t border-[#D8CFC2]/75 mt-auto pb-1">
+              {/* Search shortcut button in rail view */}
+              <button
+                type="button"
+                onClick={() => {
+                  onToggleOpen();
+                  setTimeout(() => searchInputRef.current?.focus(), 150);
+                }}
+                className="w-7 h-7 rounded-md hover:bg-[#F0E9DE] text-[#716B62] hover:text-[#302D29] flex items-center justify-center transition-colors cursor-pointer"
+                title="Search conversations"
+                aria-label="Search conversations"
+              >
+                <Search className="w-3.5 h-3.5" />
+              </button>
+
               {/* New Conversation Button at the bottom of the rail */}
               <button
                 type="button"
@@ -395,40 +395,8 @@ export function Sidebar({
             </button>
           </div>
 
-          {/* Search conversations */}
-          <div className="px-2.5 pt-2 pb-1.5 shrink-0">
-            <div className="relative flex items-center">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 text-[#88877C] pointer-events-none" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    setSearchQuery("");
-                  }
-                }}
-                placeholder="Search conversations..."
-                className="w-full h-8 pl-8 pr-7 bg-[#FFFCF7] border border-[#D8CFC2] focus:border-[#536E59] rounded-lg text-[12px] text-[#2D2A26] placeholder-[#8E8A81] focus:outline-none focus:ring-1 focus:ring-[#536E59]/40 transition-colors shadow-2xs"
-                aria-label="Search conversations"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-1.5 p-1 rounded-md hover:bg-[#EAE6DD] text-[#88877C] hover:text-[#2D2A26] cursor-pointer transition-colors"
-                  title="Clear search"
-                  aria-label="Clear search"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-          </div>
-
           {/* Conversation List */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-2.5 pb-2">
+          <div className="flex-1 min-h-0 overflow-y-auto px-2.5 pt-2.5 pb-2">
             <div className="flex items-center justify-between px-1.5 mb-1.5">
               <span className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[#88877C]">
                 {normalizedQuery ? "Search Results" : "Recent"}
@@ -621,8 +589,38 @@ export function Sidebar({
             </div>
           </div>
 
-          {/* Workspace footer with New Conversation moved to the bottom */}
+          {/* Workspace footer with Search and New Conversation moved to the bottom */}
           <div className="px-2.5 py-2.5 pb-[calc(0.6rem+env(safe-area-inset-bottom,0px))] border-t border-[#E0D9CD] bg-[#F7F4EE] shrink-0 flex flex-col gap-2">
+            {/* Search conversations */}
+            <div className="relative flex items-center">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 text-[#88877C] pointer-events-none" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setSearchQuery("");
+                  }
+                }}
+                placeholder="Search conversations..."
+                className="w-full h-8 pl-8 pr-7 bg-[#FFFCF7] border border-[#D8CFC2] focus:border-[#536E59] rounded-lg text-[12px] text-[#2D2A26] placeholder-[#8E8A81] focus:outline-none focus:ring-1 focus:ring-[#536E59]/40 transition-colors shadow-2xs"
+                aria-label="Search conversations"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-1.5 p-1 rounded-md hover:bg-[#EAE6DD] text-[#88877C] hover:text-[#2D2A26] cursor-pointer transition-colors"
+                  title="Clear search"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
             {/* Primary Action Button properly aligned at the bottom */}
             <button
               type="button"
