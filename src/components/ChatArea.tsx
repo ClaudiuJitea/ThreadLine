@@ -44,6 +44,7 @@ import {
   ChevronUp,
   Smile,
   Languages,
+  ArrowRightLeft,
   Undo2,
   AlignLeft,
 } from "lucide-react";
@@ -52,6 +53,11 @@ import {
   STARTER_CATEGORIES,
   getStarterPrompts,
 } from "@/lib/starter-prompts";
+import {
+  SUPPORTED_LANGUAGES,
+  SOURCE_LANGUAGES,
+  getLanguageName,
+} from "@/lib/translate";
 import { compressImage } from "@/lib/image-utils";
 import { buildRefinePrompt, REFINE_ACTIONS, type RefineActionId } from "@/lib/refine";
 import {
@@ -86,7 +92,12 @@ interface ChatAreaProps {
     images: ImageAttachmentMetadata[],
     customHistory?: ChatMessage[],
     customWebSearch?: boolean,
-    customAspectRatio?: string
+    customAspectRatio?: string,
+    customTranslation?: {
+      enabled: boolean;
+      source: string;
+      target: string;
+    }
   ) => Promise<void>;
   onEditPrompt?: (
     messageId: string,
@@ -98,6 +109,13 @@ interface ChatAreaProps {
   isSearchingWeb?: boolean;
   isWebSearchEnabled?: boolean;
   onToggleWebSearch?: () => void;
+  isTranslateEnabled?: boolean;
+  onToggleTranslate?: () => void;
+  translateSource?: string;
+  onChangeTranslateSource?: (source: string) => void;
+  translateTarget?: string;
+  onChangeTranslateTarget?: (target: string) => void;
+  onSwapTranslateLanguages?: () => void;
   isSidebarOpen?: boolean;
   onToggleSidebar: () => void;
   onNewChat?: () => void;
@@ -169,6 +187,13 @@ export function ChatArea({
   isSearchingWeb = false,
   isWebSearchEnabled = false,
   onToggleWebSearch,
+  isTranslateEnabled = false,
+  onToggleTranslate,
+  translateSource = "auto",
+  onChangeTranslateSource,
+  translateTarget = "en",
+  onChangeTranslateTarget,
+  onSwapTranslateLanguages,
   isSidebarOpen = true,
   onToggleSidebar,
   onNewChat,
@@ -655,7 +680,23 @@ export function ChatArea({
       textareaRef.current.style.height = "auto";
     }
 
-    await onSendMessage(textToSend, imagesToSend, undefined, undefined, activeAspectRatio);
+    const translationParams =
+      isTranslateEnabled && !activeModel.isImageGenerator
+        ? {
+            enabled: true,
+            source: translateSource,
+            target: translateTarget,
+          }
+        : undefined;
+
+    await onSendMessage(
+      textToSend,
+      imagesToSend,
+      undefined,
+      undefined,
+      activeAspectRatio,
+      translationParams
+    );
   };
 
   const hasMessages = messages.length > 0;
@@ -966,8 +1007,8 @@ export function ChatArea({
                     }`}
                   >
                     {/* Assistant Message Model Attribution Badge */}
-                    {!isUser && message.modelId && (
-                      <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-[#D8CFC2] text-[11px] text-[#625D55]">
+                    {!isUser && (message.modelId || message.isTranslation) && (
+                      <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-[#D8CFC2] text-[11px] text-[#625D55] flex-wrap">
                         <span className="font-medium text-[#536E59]">
                           {message.modelName || message.modelId}
                         </span>
@@ -979,6 +1020,12 @@ export function ChatArea({
                           <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-[#EDF3EB] text-[#536E59] border border-[#536E59]/30 font-medium">
                             <Globe className="w-2.5 h-2.5" />
                             <span>Web</span>
+                          </span>
+                        )}
+                        {message.translation && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-[#E4DDD2] text-[#536E59] border border-[#536E59]/30 font-medium">
+                            <Languages className="w-2.5 h-2.5 text-[#536E59]" />
+                            <span>{message.translation.sourceName} → {message.translation.targetName}</span>
                           </span>
                         )}
                         {message.modelProvider && (
@@ -1511,7 +1558,9 @@ export function ChatArea({
               onKeyDown={handleKeyDown}
               onPaste={handlePaste}
               placeholder={
-                activeModel.isImageGenerator
+                isTranslateEnabled && !activeModel.isImageGenerator
+                  ? `Enter text to translate (${getLanguageName(translateSource)} → ${getLanguageName(translateTarget)})...`
+                  : activeModel.isImageGenerator
                   ? `Describe the image you want to generate with ${activeModel.name}... (e.g. A serene mountain lake at golden hour, digital art)`
                   : activeModel.supportsImages
                   ? `Message ${activeModel.name}... (paste images with Ctrl+V)`
@@ -1595,6 +1644,91 @@ export function ChatArea({
                     <span className="w-1.5 h-1.5 rounded-full bg-[#A8D5B0] animate-pulse ml-0.5" />
                   )}
                 </button>
+
+                {/* Translate Toggle */}
+                <button
+                  type="button"
+                  onClick={onToggleTranslate}
+                  disabled={isStreaming || Boolean(activeModel.isImageGenerator)}
+                  aria-pressed={isTranslateEnabled}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition duration-150 border ${activeModel.isImageGenerator ? "hidden" : ""} ${
+                    isTranslateEnabled && !activeModel.isImageGenerator
+                      ? "bg-[#536E59] text-[#FFFCF7] border-[#536E59] shadow-2xs hover:bg-[#405845]"
+                      : "bg-[#FFFCF7] text-[#625D55] border-[#D8CFC2] hover:text-[#302D29] hover:bg-[#F0E9DE] hover:border-[#536E59]/40"
+                  } ${
+                    isStreaming || activeModel.isImageGenerator ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
+                  }`}
+                  title={
+                    activeModel.isImageGenerator
+                      ? "Translation is disabled for image generation."
+                      : isTranslateEnabled
+                      ? "Translate is ON (click to turn off)"
+                      : "Translate with Gemma 4 26B (click to turn on)"
+                  }
+                  aria-label={
+                    activeModel.isImageGenerator
+                      ? "Translation is disabled for image generation."
+                      : isTranslateEnabled
+                      ? "Translation is enabled. Click to disable."
+                      : "Translation is disabled. Click to enable."
+                  }
+                >
+                  <Languages className="w-3.5 h-3.5 shrink-0" />
+                  <span>Translate</span>
+                  {isTranslateEnabled && !activeModel.isImageGenerator && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#A8D5B0] animate-pulse ml-0.5" />
+                  )}
+                </button>
+
+                {/* Language Selection controls when Translate is active */}
+                {isTranslateEnabled && !activeModel.isImageGenerator && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#F4EFE6] border border-[#D8CFC2] text-xs shadow-2xs">
+                    <select
+                      value={translateSource}
+                      onChange={(e) => onChangeTranslateSource?.(e.target.value)}
+                      disabled={isStreaming}
+                      className="bg-transparent text-[#302D29] text-xs font-medium py-0.5 px-1 rounded hover:bg-[#EAE2D5] focus:bg-[#EAE2D5] focus:outline-none cursor-pointer transition max-w-[100px] sm:max-w-none truncate"
+                      title="Source language (or Auto Detect)"
+                      aria-label="Source language"
+                    >
+                      {SOURCE_LANGUAGES.map((lang) => (
+                        <option key={lang.code} value={lang.code} className="bg-[#FFFCF7] text-[#302D29]">
+                          {lang.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      onClick={onSwapTranslateLanguages}
+                      disabled={translateSource === "auto" || isStreaming}
+                      title={
+                        translateSource === "auto"
+                          ? "Cannot swap when source is Auto Detect"
+                          : "Swap source and target languages"
+                      }
+                      className="p-1 rounded text-[#625D55] hover:text-[#302D29] hover:bg-[#EAE2D5] disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
+                      aria-label="Swap source and target languages"
+                    >
+                      <ArrowRightLeft className="w-3 h-3" />
+                    </button>
+
+                    <select
+                      value={translateTarget}
+                      onChange={(e) => onChangeTranslateTarget?.(e.target.value)}
+                      disabled={isStreaming}
+                      className="bg-transparent text-[#302D29] text-xs font-medium py-0.5 px-1 rounded hover:bg-[#EAE2D5] focus:bg-[#EAE2D5] focus:outline-none cursor-pointer transition max-w-[100px] sm:max-w-none truncate"
+                      title="Target language"
+                      aria-label="Target language"
+                    >
+                      {SUPPORTED_LANGUAGES.map((lang) => (
+                        <option key={lang.code} value={lang.code} className="bg-[#FFFCF7] text-[#302D29]">
+                          {lang.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {/* Quick Text Refine & Assistant Menu */}
                 <div className={activeModel.isImageGenerator ? "hidden" : "relative"} ref={refineMenuRef}>
@@ -1722,6 +1856,21 @@ export function ChatArea({
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Generate</span>
+                  </button>
+                ) : isTranslateEnabled && !activeModel.isImageGenerator ? (
+                  /* Translate Button */
+                  <button
+                    type="submit"
+                    disabled={!inputText.trim() || isCompressing}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-medium text-xs tracking-wide transition duration-150 ${
+                      !inputText.trim() || isCompressing
+                        ? "bg-[#E2DAD0] text-[#867E74] border border-[#D8CFC2] cursor-not-allowed"
+                        : "bg-[#536E59] hover:bg-[#405845] text-[#FFFCF7] cursor-pointer shadow-xs"
+                    }`}
+                    title="Translate text with Gemma 4 26B"
+                  >
+                    <Languages className="w-3.5 h-3.5" />
+                    <span>Translate</span>
                   </button>
                 ) : (
                   /* Standard Send Button */

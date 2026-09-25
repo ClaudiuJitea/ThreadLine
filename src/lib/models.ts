@@ -45,9 +45,21 @@ export const ALLOWED_MODELS: readonly ModelOption[] = [
   },
 ] as const;
 
-export const ALLOWED_MODEL_IDS: ReadonlySet<string> = new Set(
-  ALLOWED_MODELS.map((m) => m.id)
-);
+export const TRANSLATION_MODEL_ID: AllowedModelId = "google/gemma-4-26b-a4b-it";
+
+export const TRANSLATION_MODEL_INFO: ModelOption = {
+  id: TRANSLATION_MODEL_ID,
+  name: "Gemma 4 26B",
+  provider: "Google",
+  description: "Dedicated high-accuracy translation model powered by Google Gemma 4 26B",
+  supportsImages: false,
+  badge: "Translate",
+};
+
+export const ALLOWED_MODEL_IDS: ReadonlySet<string> = new Set([
+  ...ALLOWED_MODELS.map((m) => m.id),
+  TRANSLATION_MODEL_ID,
+]);
 
 export function isAllowedModel(modelId: string): modelId is AllowedModelId {
   return ALLOWED_MODEL_IDS.has(modelId);
@@ -58,7 +70,14 @@ export function isImageGeneratorModel(modelId: string): boolean {
   return Boolean(model?.isImageGenerator);
 }
 
+export function isTranslationModel(modelId: string): boolean {
+  return modelId === TRANSLATION_MODEL_ID;
+}
+
 export function getModelInfo(modelId: string): ModelOption {
+  if (modelId === TRANSLATION_MODEL_ID) {
+    return TRANSLATION_MODEL_INFO;
+  }
   const model = ALLOWED_MODELS.find((m) => m.id === modelId);
   if (!model) {
     return ALLOWED_MODELS[0];

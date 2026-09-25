@@ -3,7 +3,8 @@ export type AllowedModelId =
   | "xiaomi/mimo-v2.6-flash"
   | "z-ai/glm-5.3-flash"
   | "deepseek/deepseek-v4.1-flash"
-  | "recraft/recraft-v4.1-flash";
+  | "recraft/recraft-v4.1-flash"
+  | "google/gemma-4-26b-a4b-it";
 
 export interface ModelOption {
   id: AllowedModelId;
@@ -49,6 +50,13 @@ export interface GeneratedImageMetadata {
   height?: number;
 }
 
+export interface TranslationMetadata {
+  source: string;
+  sourceName: string;
+  target: string;
+  targetName: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: MessageRole;
@@ -69,6 +77,9 @@ export interface ChatMessage {
   sources?: WebSourceMetadata[];
   // Generated images (from image generator models)
   generatedImages?: GeneratedImageMetadata[];
+  // Optional translation metadata
+  isTranslation?: boolean;
+  translation?: TranslationMetadata;
 }
 
 export interface Conversation {
@@ -93,6 +104,11 @@ export interface ChatRequestBody {
   }>;
   webSearch?: boolean;
   aspectRatio?: string;
+  translation?: {
+    enabled: boolean;
+    source: string;
+    target: string;
+  };
 }
 
 export interface LoginResponse {

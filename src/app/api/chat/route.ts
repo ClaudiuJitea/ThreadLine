@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getOpenRouterKey, verifySameOrigin, verifySessionFromRequest } from "@/lib/auth";
-import { isAllowedModel, isImageGeneratorModel } from "@/lib/models";
+import { isAllowedModel, isImageGeneratorModel, isTranslationModel, TRANSLATION_MODEL_ID } from "@/lib/models";
 import { ChatRequestBody } from "@/lib/types";
 import { getTextToImagePrompt } from "@/lib/image-generation";
+import { buildTranslationSystemPrompt } from "@/lib/translate";
 import {
   executeWebSearch,
   formatSourcesForOpenRouterPrompt,
@@ -267,8 +268,12 @@ export async function POST(request: Request) {
     }
   }
 
-  // 9. Optional Web Search Execution
-  const isWebSearch = Boolean(body.webSearch);
+  // 9. Translation & Web Search Execution
+  const isTranslation =
+    Boolean(body.translation?.enabled) || isTranslationModel(model);
+  const targetModel = isTranslation ? TRANSLATION_MODEL_ID : model;
+
+  const isWebSearch = !isTranslation && Boolean(body.webSearch);
   let searchResult: SearchExecutionResult | null = null;
 
   if (isWebSearch) {
@@ -328,9 +333,42 @@ export async function POST(request: Request) {
     }
   }
 
-  // 9. Prepare messages for OpenRouter with source context if web search active
+  // 10. Prepare messages for OpenRouter (Translation, Web Search, or Standard)
   let outgoingMessages = messages;
-  if (isWebSearch && searchResult) {
+  if (isTranslation) {
+    let latestUserPrompt = "";
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "user") {
+        const content = messages[i].content;
+        if (typeof content === "string") {
+          latestUserPrompt = content.trim();
+        } else if (Array.isArray(content)) {
+          for (const part of content) {
+            if (part.type === "text" && part.text) {
+              latestUserPrompt += (latestUserPrompt ? " " : "") + part.text.trim();
+            }
+          }
+        }
+        break;
+      }
+    }
+
+    if (!latestUserPrompt) {
+      return NextResponse.json(
+        { error: "A non-empty text prompt is required for translation." },
+        { status: 400 }
+      );
+    }
+
+    const source = body.translation?.source || "auto";
+    const target = body.translation?.target || "en";
+    const translationPrompt = buildTranslationSystemPrompt(source, target);
+
+    outgoingMessages = [
+      { role: "system", content: translationPrompt },
+      { role: "user", content: latestUserPrompt },
+    ];
+  } else if (isWebSearch && searchResult) {
     const webSearchInstruction = formatSourcesForOpenRouterPrompt(
       searchResult.sources,
       searchResult.noResults
@@ -341,7 +379,7 @@ export async function POST(request: Request) {
     ];
   }
 
-  // 10. Forward request to OpenRouter API
+  // 11. Forward request to OpenRouter API
   try {
     const openRouterResponse = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -355,7 +393,7 @@ export async function POST(request: Request) {
           "X-Title": "ThreadLine",
         },
         body: JSON.stringify({
-          model,
+          model: targetModel,
           messages: outgoingMessages,
           stream: true,
         }),
@@ -378,7 +416,7 @@ export async function POST(request: Request) {
       }
 
       console.error(
-        `[OpenRouter Error ${openRouterResponse.status} for ${model}]:`,
+        `[OpenRouter Error ${openRouterResponse.status} for ${targetModel}]:`,
         errorDetail
       );
 
@@ -386,7 +424,7 @@ export async function POST(request: Request) {
         {
           error: errorDetail,
           providerStatus: openRouterResponse.status,
-          model,
+          model: targetModel,
         },
         { status: openRouterResponse.status >= 500 ? 502 : openRouterResponse.status }
       );

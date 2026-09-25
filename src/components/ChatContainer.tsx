@@ -7,7 +7,8 @@ import {
   AllowedModelId,
   ImageAttachmentMetadata,
 } from "@/lib/types";
-import { DEFAULT_MODEL_ID, getModelInfo } from "@/lib/models";
+import { DEFAULT_MODEL_ID, getModelInfo, TRANSLATION_MODEL_ID } from "@/lib/models";
+import { getLanguageName } from "@/lib/translate";
 import {
   loadStoredConversations,
   saveStoredConversations,
@@ -59,6 +60,30 @@ export function ChatContainer() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(false);
   const [isSearchingWeb, setIsSearchingWeb] = useState(false);
+  const [isTranslateEnabled, setIsTranslateEnabled] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem("threadline_translate_enabled") === "true";
+    } catch {
+      return false;
+    }
+  });
+  const [translateSource, setTranslateSource] = useState<string>(() => {
+    if (typeof window === "undefined") return "auto";
+    try {
+      return localStorage.getItem("threadline_translate_source") || "auto";
+    } catch {
+      return "auto";
+    }
+  });
+  const [translateTarget, setTranslateTarget] = useState<string>(() => {
+    if (typeof window === "undefined") return "en";
+    try {
+      return localStorage.getItem("threadline_translate_target") || "en";
+    } catch {
+      return "en";
+    }
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     try {
@@ -224,19 +249,88 @@ export function ChatContainer() {
     }
   };
 
+  const handleToggleTranslate = () => {
+    setIsTranslateEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("threadline_translate_enabled", String(next));
+      } catch {}
+      if (next && isWebSearchEnabled) {
+        setIsWebSearchEnabled(false);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleWebSearch = () => {
+    setIsWebSearchEnabled((prev) => {
+      const next = !prev;
+      if (next && isTranslateEnabled) {
+        setIsTranslateEnabled(false);
+        try {
+          localStorage.setItem("threadline_translate_enabled", "false");
+        } catch {}
+      }
+      return next;
+    });
+  };
+
+  const handleChangeTranslateSource = (source: string) => {
+    setTranslateSource(source);
+    try {
+      localStorage.setItem("threadline_translate_source", source);
+    } catch {}
+  };
+
+  const handleChangeTranslateTarget = (target: string) => {
+    setTranslateTarget(target);
+    try {
+      localStorage.setItem("threadline_translate_target", target);
+    } catch {}
+  };
+
+  const handleSwapTranslateLanguages = () => {
+    if (translateSource === "auto") return;
+    const oldSource = translateSource;
+    const oldTarget = translateTarget;
+    setTranslateSource(oldTarget);
+    setTranslateTarget(oldSource);
+    try {
+      localStorage.setItem("threadline_translate_source", oldTarget);
+      localStorage.setItem("threadline_translate_target", oldSource);
+    } catch {}
+  };
+
   const handleSendMessage = async (
     prompt: string,
     images: ImageAttachmentMetadata[],
     customHistory?: ChatMessage[],
     customWebSearch?: boolean,
-    customAspectRatio?: string
+    customAspectRatio?: string,
+    customTranslation?: {
+      enabled: boolean;
+      source: string;
+      target: string;
+    }
   ) => {
     if (!activeConversation) return;
 
-    const modelInfo = getModelInfo(selectedModelId);
-    const isImageGeneration = Boolean(modelInfo.isImageGenerator);
+    const isTranslationActive =
+      customTranslation !== undefined
+        ? customTranslation.enabled
+        : isTranslateEnabled;
+    const activeSource = customTranslation?.source || translateSource;
+    const activeTarget = customTranslation?.target || translateTarget;
+
+    const targetModelId = isTranslationActive
+      ? TRANSLATION_MODEL_ID
+      : selectedModelId;
+    const modelInfo = getModelInfo(targetModelId);
+    const isImageGeneration = !isTranslationActive && Boolean(modelInfo.isImageGenerator);
     const activeUseWebSearch =
-      !isImageGeneration && (customWebSearch !== undefined ? customWebSearch : isWebSearchEnabled);
+      !isTranslationActive &&
+      !isImageGeneration &&
+      (customWebSearch !== undefined ? customWebSearch : isWebSearchEnabled);
 
     if (activeUseWebSearch) {
       setIsSearchingWeb(true);
@@ -248,7 +342,7 @@ export function ChatContainer() {
       role: "user",
       content: prompt,
       createdAt: Date.now(),
-      attachments: images,
+      attachments: isTranslationActive ? [] : images,
     };
 
     const currentHistory =
@@ -257,10 +351,10 @@ export function ChatContainer() {
     // Check request budget and prune older images if necessary
     const aspectRatio = customAspectRatio || selectedAspectRatio;
     const { payloadMessages, droppedImageCount, droppedMessageCount, exceedsBudget } = buildPayloadWithBudgetControl(
-      isImageGeneration ? [] : currentHistory,
+      isImageGeneration || isTranslationActive ? [] : currentHistory,
       prompt,
-      isImageGeneration ? [] : images,
-      { model: selectedModelId, webSearch: activeUseWebSearch, aspectRatio }
+      isImageGeneration || isTranslationActive ? [] : images,
+      { model: targetModelId, webSearch: activeUseWebSearch, aspectRatio }
     );
 
     if (droppedImageCount > 0 || droppedMessageCount > 0) {
@@ -273,7 +367,9 @@ export function ChatContainer() {
       currentHistory.length === 0 &&
       (updatedTitle === "New Conversation" || !updatedTitle)
     ) {
-      updatedTitle = prompt.slice(0, 32) || (images.length > 0 ? "Image Analysis" : "New Conversation");
+      updatedTitle = isTranslationActive
+        ? `Translate: ${prompt.slice(0, 24)}...`
+        : prompt.slice(0, 32) || (images.length > 0 ? "Image Analysis" : "New Conversation");
     }
 
     // Prepare assistant placeholder message
@@ -283,10 +379,19 @@ export function ChatContainer() {
       role: "assistant",
       content: "",
       createdAt: Date.now(),
-      modelId: selectedModelId,
-      modelName: modelInfo.name,
+      modelId: targetModelId,
+      modelName: isTranslationActive ? "Gemma 4 26B" : modelInfo.name,
       modelProvider: modelInfo.provider,
       isWebSearch: activeUseWebSearch,
+      isTranslation: isTranslationActive,
+      translation: isTranslationActive
+        ? {
+            source: activeSource,
+            sourceName: getLanguageName(activeSource),
+            target: activeTarget,
+            targetName: getLanguageName(activeTarget),
+          }
+        : undefined,
     };
 
     // Update conversation with user message and empty assistant message
@@ -299,7 +404,6 @@ export function ChatContainer() {
             ...c,
             title: updatedTitle,
             updatedAt: Date.now(),
-            modelId: selectedModelId,
             messages: [...baseMessages, userMessage, assistantMessage],
           };
         }
@@ -325,10 +429,19 @@ export function ChatContainer() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: selectedModelId,
-          messages: payloadMessages,
+          model: targetModelId,
+          messages: isTranslationActive
+            ? [{ role: "user", content: prompt }]
+            : payloadMessages,
           webSearch: activeUseWebSearch,
           aspectRatio,
+          translation: isTranslationActive
+            ? {
+                enabled: true,
+                source: activeSource,
+                target: activeTarget,
+              }
+            : undefined,
         }),
         signal: controller.signal,
       });
@@ -517,13 +630,20 @@ export function ChatContainer() {
     const previousHistory = msgs.slice(0, msgIndex);
     const nextMsg = msgs[msgIndex + 1];
     const hadWebSearch = nextMsg?.isWebSearch;
+    const hadTranslation = nextMsg?.isTranslation && nextMsg.translation ? {
+      enabled: true,
+      source: nextMsg.translation.source,
+      target: nextMsg.translation.target,
+    } : undefined;
 
     // Resend updated prompt preserving any image attachments from this message
     await handleSendMessage(
       newContent,
       targetMsg.attachments || [],
       previousHistory,
-      hadWebSearch !== undefined ? hadWebSearch : isWebSearchEnabled
+      hadWebSearch !== undefined ? hadWebSearch : isWebSearchEnabled,
+      undefined,
+      hadTranslation
     );
   };
 
@@ -546,13 +666,20 @@ export function ChatContainer() {
     const previousHistory = msgs.slice(0, lastUserIndex);
     const lastAsstMsg = msgs[msgs.length - 1];
     const hadWebSearch = lastAsstMsg?.isWebSearch;
+    const hadTranslation = lastAsstMsg?.isTranslation && lastAsstMsg.translation ? {
+      enabled: true,
+      source: lastAsstMsg.translation.source,
+      target: lastAsstMsg.translation.target,
+    } : undefined;
 
     // Resend the prompt and attachments with previousHistory
     await handleSendMessage(
       lastUserMsg.content,
       lastUserMsg.attachments || [],
       previousHistory,
-      hadWebSearch !== undefined ? hadWebSearch : isWebSearchEnabled
+      hadWebSearch !== undefined ? hadWebSearch : isWebSearchEnabled,
+      undefined,
+      hadTranslation
     );
   };
 
@@ -585,7 +712,14 @@ export function ChatContainer() {
         isStreaming={isStreaming}
         isSearchingWeb={isSearchingWeb}
         isWebSearchEnabled={isWebSearchEnabled}
-        onToggleWebSearch={() => setIsWebSearchEnabled((prev) => !prev)}
+        onToggleWebSearch={handleToggleWebSearch}
+        isTranslateEnabled={isTranslateEnabled}
+        onToggleTranslate={handleToggleTranslate}
+        translateSource={translateSource}
+        onChangeTranslateSource={handleChangeTranslateSource}
+        translateTarget={translateTarget}
+        onChangeTranslateTarget={handleChangeTranslateTarget}
+        onSwapTranslateLanguages={handleSwapTranslateLanguages}
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={handleToggleSidebar}
         onNewChat={handleNewChat}

@@ -11,6 +11,7 @@ A private, single-user AI chat interface built with Next.js App Router, React, T
 - **Mid-Chat Model Switching**: Switch models mid-conversation with per-message model attribution.
 - **Web Search**: Real-time search integration with Tavily, providing inline citations and source previews.
 - **Image Generation**: Generate images with Recraft V4.1 Flash supporting multiple aspect ratios.
+- **Dedicated Translation Mode**: Toggle Translate to route prompts to Google Gemma 4 26B (`google/gemma-4-26b-a4b-it`) with support for Auto Detect and over 25 languages.
 - **Image Uploads & Vision**: Upload images with automatic browser-side resizing and request-budget pruning.
 - **Local Storage**: All conversation history is stored strictly in your browser local storage.
 
