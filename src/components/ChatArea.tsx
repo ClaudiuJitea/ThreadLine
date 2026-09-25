@@ -709,19 +709,6 @@ export function ChatArea({
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#F8F5EF] overflow-hidden relative">
-      {/* Mobile only: Expand Sidebar Button (when sidebar is closed) */}
-      {!isSidebarOpen && (
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          className="flex lg:hidden absolute left-0 top-1/2 -translate-y-1/2 z-40 w-6 h-11 rounded-r-full bg-[#FFFCF7] hover:bg-[#F2ECE2] border border-l-0 border-[#D8CFC2] hover:border-[#536E59] shadow-[0_1px_4px_rgba(48,45,41,0.06),0_1px_2px_rgba(48,45,41,0.04)] hover:shadow-[0_3px_10px_rgba(83,110,89,0.18)] items-center justify-center text-[#536E59] transition-all duration-150 cursor-pointer active:scale-95 group pl-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[#F8F5EF]"
-          title="Show sidebar (Ctrl+B)"
-          aria-label="Show sidebar"
-        >
-          <PanelLeft className="w-3.5 h-3.5 text-[#536E59]" />
-        </button>
-      )}
-
       {/* Top Navigation Bar - Refined Compact Layer */}
       <header
         className={`h-11 border-b px-3 sm:px-4 flex items-center justify-between z-20 shrink-0 transition-colors duration-150 ${
@@ -731,12 +718,12 @@ export function ChatArea({
         }`}
       >
         <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-          {/* Sidebar Toggle Button */}
+          {/* Mobile Sidebar Toggle Button (Unthemed) */}
           <button
             type="button"
             onClick={onToggleSidebar}
-            className={`w-7 h-7 rounded-md bg-[#FFFCF7] hover:bg-[#EDE7DC] border border-[#D6CEC1] hover:border-[#536E59]/50 items-center justify-center text-[#536E59] shadow-2xs cursor-pointer active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 ${
-              isSidebarOpen ? "hidden" : "flex"
+            className={`w-7 h-7 rounded-md bg-[#FFFCF7] hover:bg-[#EDE7DC] border border-[#D6CEC1] hover:border-[#B5ADA0] items-center justify-center text-[#55504A] hover:text-[#1F1E1B] shadow-2xs cursor-pointer active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9E988D]/50 ${
+              isSidebarOpen ? "hidden" : "flex lg:hidden"
             }`}
             title="Open sidebar (Ctrl+B)"
             aria-label="Open sidebar"
