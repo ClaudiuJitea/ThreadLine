@@ -12,7 +12,8 @@
     "test:security": "node scripts/test-security.mjs",
     "test:web-search": "jiti scripts/test-web-search.mjs",
     "test:translation": "jiti scripts/test-translation.mjs",
-    "test": "jiti scripts/test-web-search.mjs"
+    "test:flagging": "jiti scripts/test-flagging.mjs",
+    "test": "jiti scripts/test-flagging.mjs && jiti scripts/test-translation.mjs && jiti scripts/test-web-search.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

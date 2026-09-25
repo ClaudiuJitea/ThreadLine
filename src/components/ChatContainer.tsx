@@ -683,6 +683,23 @@ export function ChatContainer() {
     );
   };
 
+  const handleToggleFlagMessage = useCallback((messageId: string) => {
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.id === activeConversationId) {
+          return {
+            ...c,
+            updatedAt: Date.now(),
+            messages: c.messages.map((m) =>
+              m.id === messageId ? { ...m, isFlagged: !m.isFlagged } : m
+            ),
+          };
+        }
+        return c;
+      })
+    );
+  }, [activeConversationId]);
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#F8F5EF] text-[#302D29]">
       {/* Sidebar */}
@@ -709,6 +726,7 @@ export function ChatContainer() {
         onEditPrompt={handleEditPrompt}
         onRetry={handleRetry}
         onStopGeneration={handleStopGeneration}
+        onToggleFlagMessage={handleToggleFlagMessage}
         isStreaming={isStreaming}
         isSearchingWeb={isSearchingWeb}
         isWebSearchEnabled={isWebSearchEnabled}

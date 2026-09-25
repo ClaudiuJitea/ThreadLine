@@ -47,6 +47,7 @@ import {
   ArrowRightLeft,
   Undo2,
   AlignLeft,
+  Flag,
 } from "lucide-react";
 import {
   StarterCategory,
@@ -105,6 +106,7 @@ interface ChatAreaProps {
   ) => Promise<void>;
   onRetry: () => void;
   onStopGeneration: () => void;
+  onToggleFlagMessage?: (messageId: string) => void;
   isStreaming: boolean;
   isSearchingWeb?: boolean;
   isWebSearchEnabled?: boolean;
@@ -175,6 +177,7 @@ function extractImageFiles(clipboardData: DataTransfer): File[] {
 }
 
 export function ChatArea({
+  conversationId,
   conversationTitle,
   messages,
   selectedModelId,
@@ -183,6 +186,7 @@ export function ChatArea({
   onEditPrompt,
   onRetry,
   onStopGeneration,
+  onToggleFlagMessage,
   isStreaming,
   isSearchingWeb = false,
   isWebSearchEnabled = false,
@@ -213,6 +217,18 @@ export function ChatArea({
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editInputText, setEditInputText] = useState("");
   const [internalAspectRatio, setInternalAspectRatio] = useState<string>("1:1");
+  const [showOnlyFlagged, setShowOnlyFlagged] = useState(false);
+  const [prevConversationId, setPrevConversationId] = useState(conversationId);
+  if (prevConversationId !== conversationId) {
+    setPrevConversationId(conversationId);
+    setShowOnlyFlagged(false);
+  }
+
+  const flaggedCount = messages.filter((m) => m.isFlagged).length;
+  const displayedMessages = showOnlyFlagged
+    ? messages.filter((m) => m.isFlagged)
+    : messages;
+
   const activeModel = getModelInfo(selectedModelId);
 
   const activeAspectRatio = selectedAspectRatio || internalAspectRatio;
@@ -765,6 +781,42 @@ export function ChatArea({
             </button>
           )}
 
+          {/* Flagged Messages Filter Toggle Button */}
+          {flaggedCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowOnlyFlagged((prev) => !prev)}
+              aria-pressed={showOnlyFlagged}
+              className={`group h-7 flex items-center gap-1.5 px-2 sm:px-2.5 rounded-md border text-[11px] font-medium transition-all duration-150 cursor-pointer shadow-2xs active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D08B6B]/50 focus-visible:ring-offset-1 focus-visible:ring-offset-[#F4EFE6] ${
+                showOnlyFlagged
+                  ? "bg-[#FDF0EB] border-[#D08B6B] text-[#9A5137] shadow-xs"
+                  : "bg-[#FFFCF7] hover:bg-[#FDF2EE] border-[#E3CEBF] hover:border-[#D08B6B] text-[#865947] hover:text-[#5E3626]"
+              }`}
+              title={
+                showOnlyFlagged
+                  ? "Show all conversation messages"
+                  : `Show flagged messages only (${flaggedCount})`
+              }
+              aria-label={
+                showOnlyFlagged
+                  ? "Show all conversation messages"
+                  : `Show flagged messages only (${flaggedCount})`
+              }
+            >
+              <Flag
+                className={`w-3 h-3 ${
+                  showOnlyFlagged
+                    ? "fill-[#D08B6B] text-[#D08B6B]"
+                    : "text-[#B36E52] group-hover:text-[#9A5137]"
+                }`}
+              />
+              <span className="tabular-nums font-semibold">{flaggedCount}</span>
+              <span className="hidden md:inline">
+                {showOnlyFlagged ? "Flagged Only" : "Flagged"}
+              </span>
+            </button>
+          )}
+
           {/* Layout Width Toggle Button */}
           <button
             type="button"
@@ -980,61 +1032,112 @@ export function ChatArea({
         ) : (
           /* Message List */
           <div className={`${contentWidthClass} space-y-4`}>
-            {messages.map((message, index) => {
-              const isUser = message.role === "user";
-              const isLastMessage = index === messages.length - 1;
-
-              return (
-                <div
-                  key={message.id || index}
-                  className={`flex gap-3 text-sm ${
-                    isUser ? "justify-end" : "justify-start"
-                  }`}
+            {/* Flagged filter banner */}
+            {showOnlyFlagged && (
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#FAF0EB] border border-[#E3CEBF] text-xs text-[#865947] shadow-2xs">
+                <div className="flex items-center gap-1.5">
+                  <Flag className="w-3.5 h-3.5 fill-[#D08B6B] text-[#D08B6B] shrink-0" />
+                  <span className="font-medium">
+                    Showing {displayedMessages.length} flagged {displayedMessages.length === 1 ? "message" : "messages"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowOnlyFlagged(false)}
+                  className="text-[11px] underline hover:text-[#5E3626] font-medium cursor-pointer"
                 >
-                  {!isUser && (
-                    <div className="w-7 h-7 rounded-md bg-[#FFFCF7] border border-[#D8CFC2] flex items-center justify-center shrink-0 mt-0.5 text-[#536E59] shadow-xs">
-                      <Bot className="w-4 h-4" />
-                    </div>
-                  )}
+                  Show all
+                </button>
+              </div>
+            )}
 
+            {showOnlyFlagged && displayedMessages.length === 0 ? (
+              <div className="text-center py-10 px-4 rounded-xl border border-dashed border-[#E3CEBF] bg-[#FAF0EB]/60">
+                <Flag className="w-6 h-6 mx-auto mb-2 text-[#D08B6B]/70" />
+                <p className="text-xs font-medium text-[#865947]">No flagged messages in this conversation</p>
+                <p className="text-[11px] text-[#A67E6F] mt-1 mb-3">
+                  Click the flag icon on any message to pin it here.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowOnlyFlagged(false)}
+                  className="text-xs px-3 py-1 rounded-md bg-[#D08B6B] text-white hover:bg-[#B87052] font-medium cursor-pointer"
+                >
+                  Show all messages
+                </button>
+              </div>
+            ) : (
+              displayedMessages.map((message, index) => {
+                const isUser = message.role === "user";
+                const isLastMessage = index === displayedMessages.length - 1;
+
+                return (
                   <div
-                    className={`rounded-xl px-4 py-3.5 border ${
-                      isUser
-                        ? "max-w-[88%] sm:max-w-[80%] lg:max-w-[75%] bg-[#FFFCF7] border-[#D8CFC2] text-[#302D29] shadow-xs"
-                        : message.isError
-                        ? "flex-1 min-w-0 bg-[#F5ECE8] border-[#A4715E] text-[#A4715E]"
-                        : "flex-1 min-w-0 bg-[#EDE7DC] border-[#D8CFC2] text-[#302D29] shadow-xs"
+                    key={message.id || index}
+                    className={`flex gap-3 text-sm ${
+                      isUser ? "justify-end" : "justify-start"
                     }`}
                   >
-                    {/* Assistant Message Model Attribution Badge */}
-                    {!isUser && (message.modelId || message.isTranslation) && (
-                      <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-[#D8CFC2] text-[11px] text-[#625D55] flex-wrap">
-                        <span className="font-medium text-[#536E59]">
-                          {message.modelName || message.modelId}
-                        </span>
-                        <span>•</span>
-                        <span className="font-mono text-[10px] text-[#716B62]">
-                          {message.modelId}
-                        </span>
-                        {message.isWebSearch && (
-                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-[#EDF3EB] text-[#536E59] border border-[#536E59]/30 font-medium">
-                            <Globe className="w-2.5 h-2.5" />
-                            <span>Web</span>
-                          </span>
-                        )}
-                        {message.translation && (
-                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-[#E4DDD2] text-[#536E59] border border-[#536E59]/30 font-medium">
-                            <Languages className="w-2.5 h-2.5 text-[#536E59]" />
-                            <span>{message.translation.sourceName} → {message.translation.targetName}</span>
-                          </span>
-                        )}
-                        {message.modelProvider && (
-                          <span className="ml-auto text-[10px] px-1.5 py-0.2 rounded bg-[#F0E9DE] text-[#625D55] border border-[#D8CFC2] font-mono">
-                            {message.modelProvider}
-                          </span>
-                        )}
+                    {!isUser && (
+                      <div className="w-7 h-7 rounded-md bg-[#FFFCF7] border border-[#D8CFC2] flex items-center justify-center shrink-0 mt-0.5 text-[#536E59] shadow-xs">
+                        <Bot className="w-4 h-4" />
                       </div>
                     )}
+
+                    <div
+                      className={`rounded-xl px-4 py-3.5 border transition-all duration-150 ${
+                        isUser
+                          ? message.isFlagged
+                            ? "max-w-[88%] sm:max-w-[80%] lg:max-w-[75%] bg-[#FFFDF9] border-[#D69D83] text-[#302D29] shadow-[0_2px_8px_rgba(208,139,107,0.12)] ring-1 ring-[#D08B6B]/30 relative before:absolute before:right-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-l-full before:bg-[#D08B6B]"
+                            : "max-w-[88%] sm:max-w-[80%] lg:max-w-[75%] bg-[#FFFCF7] border-[#D8CFC2] text-[#302D29] shadow-xs"
+                          : message.isError
+                          ? message.isFlagged
+                            ? "flex-1 min-w-0 bg-[#F5ECE8] border-[#A4715E] text-[#A4715E] ring-1 ring-[#D08B6B]/30 relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-[#D08B6B]"
+                            : "flex-1 min-w-0 bg-[#F5ECE8] border-[#A4715E] text-[#A4715E]"
+                          : message.isFlagged
+                          ? "flex-1 min-w-0 bg-[#F4EDE2] border-[#D69D83] text-[#302D29] shadow-[0_2px_8px_rgba(208,139,107,0.12)] ring-1 ring-[#D08B6B]/30 relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-[#D08B6B]"
+                          : "flex-1 min-w-0 bg-[#EDE7DC] border-[#D8CFC2] text-[#302D29] shadow-xs"
+                      }`}
+                    >
+                      {/* Assistant Message Model Attribution Badge */}
+                      {!isUser && (
+                        <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-[#D8CFC2] text-[11px] text-[#625D55] flex-wrap">
+                          {message.modelId && (
+                            <>
+                              <span className="font-medium text-[#536E59]">
+                                {message.modelName || message.modelId}
+                              </span>
+                              <span>•</span>
+                              <span className="font-mono text-[10px] text-[#716B62]">
+                                {message.modelId}
+                              </span>
+                            </>
+                          )}
+                          {message.isWebSearch && (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded bg-[#EDF3EB] text-[#536E59] border border-[#536E59]/30 font-medium">
+                              <Globe className="w-2.5 h-2.5" />
+                              <span>Web</span>
+                            </span>
+                          )}
+                          {message.translation && (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-[#E4DDD2] text-[#536E59] border border-[#536E59]/30 font-medium">
+                              <Languages className="w-2.5 h-2.5 text-[#536E59]" />
+                              <span>{message.translation.sourceName} → {message.translation.targetName}</span>
+                            </span>
+                          )}
+                          {message.isFlagged && (
+                            <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-[#FDF0EB] text-[#9A5137] border border-[#D08B6B]/30 font-medium">
+                              <Flag className="w-2.5 h-2.5 fill-current" />
+                              <span>Flagged</span>
+                            </span>
+                          )}
+                          {message.modelProvider && (
+                            <span className="ml-auto text-[10px] px-1.5 py-0.2 rounded bg-[#F0E9DE] text-[#625D55] border border-[#D8CFC2] font-mono">
+                              {message.modelProvider}
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                     {/* Image Attachments */}
                     {message.attachments && message.attachments.length > 0 && (
@@ -1141,59 +1244,99 @@ export function ChatArea({
                           {message.content}
                         </p>
 
-                        {/* User Prompt Footer: Timestamp + Edit Query + Copy Button */}
-                        <div className="mt-2.5 flex items-center justify-end gap-1 text-xs select-none">
-                          <span className="text-[11px] text-[#787167] font-normal tabular-nums leading-none tracking-tight mr-1.5 h-6 inline-flex items-center">
-                            {new Date(message.createdAt).toLocaleTimeString([], {
-                              hour: "numeric",
-                              minute: "2-digit",
-                            })}
-                          </span>
+                        {/* User Prompt Footer: Timestamp + Flag + Edit Query + Copy Button */}
+                        <div className="mt-2.5 flex items-center justify-between gap-1 text-xs select-none">
+                          <div className="flex items-center gap-1.5">
+                            {message.isFlagged && (
+                              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-[#FDF0EB] text-[#9A5137] border border-[#D08B6B]/30 font-medium">
+                                <Flag className="w-2.5 h-2.5 fill-current" />
+                                <span>Flagged</span>
+                              </span>
+                            )}
+                          </div>
 
-                          <div className="flex items-center gap-0.5">
-                            {/* Edit Query Button */}
-                            <div className="relative group/tooltip flex items-center">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditingMessageId(message.id);
-                                  setEditInputText(message.content);
-                                }}
-                                disabled={isStreaming}
-                                className={`w-6 h-6 rounded-md flex items-center justify-center text-[#716B62] hover:text-[#302D29] hover:bg-[#F0E9DE] transition-colors cursor-pointer ${
-                                  isStreaming ? "opacity-40 cursor-not-allowed" : ""
-                                }`}
-                                title="Edit query"
-                                aria-label="Edit query"
-                              >
-                                <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
-                              </button>
-                              {/* Hover Tooltip */}
-                              <div className="pointer-events-none absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#2D2A26] text-[#FFFCF7] text-[10px] font-medium whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150 shadow-md z-30">
-                                Edit query
-                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#2D2A26]" />
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] text-[#787167] font-normal tabular-nums leading-none tracking-tight mr-1 h-6 inline-flex items-center">
+                              {new Date(message.createdAt).toLocaleTimeString([], {
+                                hour: "numeric",
+                                minute: "2-digit",
+                              })}
+                            </span>
+
+                            <div className="flex items-center gap-0.5">
+                              {/* Flag Toggle Button */}
+                              {onToggleFlagMessage && (
+                                <div className="relative group/tooltip flex items-center">
+                                  <button
+                                    type="button"
+                                    onClick={() => onToggleFlagMessage(message.id)}
+                                    className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
+                                      message.isFlagged
+                                        ? "text-[#C06A49] bg-[#FDF0EB] hover:bg-[#F9DFD5]"
+                                        : "text-[#716B62] hover:text-[#302D29] hover:bg-[#F0E9DE]"
+                                    }`}
+                                    title={message.isFlagged ? "Unflag message" : "Flag message"}
+                                    aria-label={message.isFlagged ? "Unflag message" : "Flag message"}
+                                  >
+                                    <Flag
+                                      className={`w-3.5 h-3.5 ${
+                                        message.isFlagged ? "fill-current" : ""
+                                      }`}
+                                      strokeWidth={1.8}
+                                    />
+                                  </button>
+                                  {/* Hover Tooltip */}
+                                  <div className="pointer-events-none absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#2D2A26] text-[#FFFCF7] text-[10px] font-medium whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150 shadow-md z-30">
+                                    {message.isFlagged ? "Unflag message" : "Flag message"}
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#2D2A26]" />
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Edit Query Button */}
+                              <div className="relative group/tooltip flex items-center">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingMessageId(message.id);
+                                    setEditInputText(message.content);
+                                  }}
+                                  disabled={isStreaming}
+                                  className={`w-6 h-6 rounded-md flex items-center justify-center text-[#716B62] hover:text-[#302D29] hover:bg-[#F0E9DE] transition-colors cursor-pointer ${
+                                    isStreaming ? "opacity-40 cursor-not-allowed" : ""
+                                  }`}
+                                  title="Edit query"
+                                  aria-label="Edit query"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
+                                </button>
+                                {/* Hover Tooltip */}
+                                <div className="pointer-events-none absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#2D2A26] text-[#FFFCF7] text-[10px] font-medium whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150 shadow-md z-30">
+                                  Edit query
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#2D2A26]" />
+                                </div>
                               </div>
-                            </div>
 
-                            {/* Copy Button */}
-                            <div className="relative group/tooltip flex items-center">
-                              <button
-                                type="button"
-                                onClick={() => handleCopyMessage(message.content, message.id)}
-                                className="w-6 h-6 rounded-md flex items-center justify-center text-[#716B62] hover:text-[#302D29] hover:bg-[#F0E9DE] transition-colors cursor-pointer"
-                                title="Copy query"
-                                aria-label="Copy query"
-                              >
-                                {copiedMessageId === message.id ? (
-                                  <Check className="w-3.5 h-3.5 text-[#536E59]" strokeWidth={2} />
-                                ) : (
-                                  <Copy className="w-3.5 h-3.5" strokeWidth={1.8} />
-                                )}
-                              </button>
-                              {/* Hover Tooltip */}
-                              <div className="pointer-events-none absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#2D2A26] text-[#FFFCF7] text-[10px] font-medium whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150 shadow-md z-30">
-                                {copiedMessageId === message.id ? "Copied" : "Copy"}
-                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#2D2A26]" />
+                              {/* Copy Button */}
+                              <div className="relative group/tooltip flex items-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyMessage(message.content, message.id)}
+                                  className="w-6 h-6 rounded-md flex items-center justify-center text-[#716B62] hover:text-[#302D29] hover:bg-[#F0E9DE] transition-colors cursor-pointer"
+                                  title="Copy query"
+                                  aria-label="Copy query"
+                                >
+                                  {copiedMessageId === message.id ? (
+                                    <Check className="w-3.5 h-3.5 text-[#536E59]" strokeWidth={2} />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5" strokeWidth={1.8} />
+                                  )}
+                                </button>
+                                {/* Hover Tooltip */}
+                                <div className="pointer-events-none absolute bottom-full mb-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-[#2D2A26] text-[#FFFCF7] text-[10px] font-medium whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150 shadow-md z-30">
+                                  {copiedMessageId === message.id ? "Copied" : "Copy"}
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#2D2A26]" />
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -1360,6 +1503,30 @@ export function ChatArea({
                           })}
                         </span>
                         <div className="flex items-center gap-1.5">
+                          {/* Flag Button */}
+                          {onToggleFlagMessage && (
+                            <button
+                              type="button"
+                              onClick={() => onToggleFlagMessage(message.id)}
+                              className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded transition cursor-pointer ${
+                                message.isFlagged
+                                  ? "bg-[#FDF0EB] text-[#C06A49] hover:bg-[#F9DFD5] font-medium border border-[#D08B6B]/30"
+                                  : "hover:bg-[#F0E9DE] text-[#625D55] hover:text-[#302D29]"
+                              }`}
+                              title={message.isFlagged ? "Unflag response" : "Flag response"}
+                              aria-label={message.isFlagged ? "Unflag response" : "Flag response"}
+                            >
+                              <Flag
+                                className={`w-3 h-3 ${
+                                  message.isFlagged
+                                    ? "fill-current text-[#C06A49]"
+                                    : "text-[#716B62]"
+                                }`}
+                              />
+                              <span>{message.isFlagged ? "Flagged" : "Flag"}</span>
+                            </button>
+                          )}
+
                           <button
                             type="button"
                             onClick={() => handleCopyMessage(message.content, message.id)}
@@ -1401,7 +1568,8 @@ export function ChatArea({
                   )}
                 </div>
               );
-            })}
+            })
+          )}
             <div ref={messagesEndRef} />
           </div>
         )}

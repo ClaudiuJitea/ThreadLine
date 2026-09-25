@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronLeft,
   HardDrive,
+  Flag,
 } from "lucide-react";
 import { ThreadLineLogo } from "./ThreadLineLogo";
 
@@ -257,6 +258,7 @@ export function Sidebar({
               <div className="flex flex-col items-center gap-1 w-full px-1 py-1.5 overflow-y-auto max-h-[calc(100vh-240px)]">
                 {conversations.slice(0, 15).map((conv) => {
                   const isActive = conv.id === activeConversationId;
+                  const hasFlagged = conv.messages.some((m) => m.isFlagged);
                   return (
                     <div
                       key={conv.id}
@@ -270,10 +272,13 @@ export function Sidebar({
                             ? "bg-[#FFFCF7] text-[#536E59] font-medium border border-[#D5CDBD] shadow-xs ring-1 ring-[#536E59]/25"
                             : "text-[#716B62] hover:bg-[#F0E9DE] hover:text-[#302D29]"
                         }`}
-                        title={conv.title}
+                        title={`${conv.title}${hasFlagged ? " (Contains flagged messages)" : ""}`}
                         aria-label={conv.title}
                       >
                         <MessageSquare className="w-3.5 h-3.5" />
+                        {hasFlagged && (
+                          <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#D08B6B] ring-1 ring-[#FFFCF7]" />
+                        )}
                       </button>
 
                       {/* Delete conversation button in compacted rail - fully unclipped */}
@@ -458,6 +463,18 @@ export function Sidebar({
                                   <span className="w-0.5 h-0.5 rounded-full bg-[#A3998C]" aria-hidden="true" />
                                   <span>
                                     {conv.messages.length} {conv.messages.length === 1 ? "msg" : "msgs"}
+                                  </span>
+                                </>
+                              )}
+                              {conv.messages.some((m) => m.isFlagged) && (
+                                <>
+                                  <span className="w-0.5 h-0.5 rounded-full bg-[#A3998C]" aria-hidden="true" />
+                                  <span
+                                    className="flex items-center gap-0.5 text-[#C06A49] font-medium"
+                                    title={`${conv.messages.filter((m) => m.isFlagged).length} flagged messages`}
+                                  >
+                                    <Flag className="w-2.5 h-2.5 fill-current" />
+                                    <span>{conv.messages.filter((m) => m.isFlagged).length}</span>
                                   </span>
                                 </>
                               )}
