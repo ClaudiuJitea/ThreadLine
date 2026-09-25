@@ -232,17 +232,17 @@ export function Sidebar({
                 <button
                   type="button"
                   onClick={onToggleOpen}
-                  className="group/logo relative w-7 h-7 rounded-md flex items-center justify-center cursor-pointer transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9E988D]/50 shrink-0"
+                  className="group/logo relative w-7 h-7 rounded-lg bg-[#344D3C] hover:bg-[#2A3E31] text-[#F8F5EF] flex items-center justify-center shadow-2xs cursor-pointer transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#344D3C]/50 shrink-0"
                   title="Expand sidebar (Ctrl+B)"
                   aria-label="Expand sidebar"
                 >
                   {/* Default State: ThreadLine Logo */}
-                  <div className="w-7 h-7 rounded-lg bg-[#344D3C] flex items-center justify-center text-[#F8F5EF] shadow-2xs transition-all duration-150 group-hover/railheader:opacity-0 group-hover/railheader:scale-90 group-focus-visible/logo:opacity-0">
+                  <div className="flex items-center justify-center text-[#F8F5EF] transition-all duration-150 group-hover/railheader:opacity-0 group-hover/railheader:scale-75 group-focus-visible/logo:opacity-0">
                     <ThreadLineLogo className="w-3.5 h-3.5" />
                   </div>
 
-                  {/* Hover/Focus State: Revealed Unthemed PanelLeft Button */}
-                  <div className="absolute inset-0 w-7 h-7 rounded-md bg-[#FFFCF7] group-hover/railheader:bg-[#EDE7DC] border border-[#D6CEC1] group-hover/railheader:border-[#B5ADA0] opacity-0 group-hover/railheader:opacity-100 group-focus-visible/logo:opacity-100 flex items-center justify-center text-[#55504A] group-hover/railheader:text-[#1F1E1B] shadow-2xs transition-all duration-150 pointer-events-none">
+                  {/* Hover/Focus State: Revealed PanelLeft Button themed with logo color */}
+                  <div className="absolute inset-0 flex items-center justify-center text-[#F8F5EF] opacity-0 group-hover/railheader:opacity-100 group-focus-visible/logo:opacity-100 transition-all duration-150 pointer-events-none">
                     <PanelLeft className="w-3.5 h-3.5" />
                   </div>
                 </button>
@@ -374,11 +374,11 @@ export function Sidebar({
               </div>
             </div>
 
-            {/* Sidebar toggle button (Unthemed) */}
+            {/* Sidebar toggle button themed with logo color */}
             <button
               type="button"
               onClick={onToggleOpen}
-              className="w-7 h-7 rounded-md bg-[#FFFCF7] hover:bg-[#EDE7DC] border border-[#D6CEC1] hover:border-[#B5ADA0] flex items-center justify-center text-[#55504A] hover:text-[#1F1E1B] shadow-2xs active:scale-95 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9E988D]/50 shrink-0"
+              className="w-7 h-7 rounded-lg bg-[#344D3C] hover:bg-[#2A3E31] text-[#F8F5EF] flex items-center justify-center shadow-2xs active:scale-95 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#344D3C]/50 shrink-0"
               title="Close sidebar (Ctrl+B)"
               aria-label="Close sidebar"
             >

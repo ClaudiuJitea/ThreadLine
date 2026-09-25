@@ -718,11 +718,11 @@ export function ChatArea({
         }`}
       >
         <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-          {/* Mobile Sidebar Toggle Button (Unthemed) */}
+          {/* Mobile Sidebar Toggle Button themed with logo color */}
           <button
             type="button"
             onClick={onToggleSidebar}
-            className={`w-7 h-7 rounded-md bg-[#FFFCF7] hover:bg-[#EDE7DC] border border-[#D6CEC1] hover:border-[#B5ADA0] items-center justify-center text-[#55504A] hover:text-[#1F1E1B] shadow-2xs cursor-pointer active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9E988D]/50 ${
+            className={`w-7 h-7 rounded-lg bg-[#344D3C] hover:bg-[#2A3E31] items-center justify-center text-[#F8F5EF] shadow-2xs cursor-pointer active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#344D3C]/50 ${
               isSidebarOpen ? "hidden" : "flex lg:hidden"
             }`}
             title="Open sidebar (Ctrl+B)"
