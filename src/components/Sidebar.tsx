@@ -252,7 +252,7 @@ export function Sidebar({
               <button
                 type="button"
                 onClick={handleNewChat}
-                className="w-7 h-7 rounded-md bg-[#536E59] hover:bg-[#405845] text-[#FFFCF7] flex items-center justify-center shadow-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50 active:scale-95 shrink-0 mt-0.5"
+                className="w-7 h-7 rounded-md bg-[#536E59] hover:bg-[#405845] text-[#FFFCF7] flex items-center justify-center shadow-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50 active:scale-95 shrink-0 mt-2.5"
                 title="New chat"
                 aria-label="New chat"
               >
@@ -387,7 +387,7 @@ export function Sidebar({
           </div>
 
           {/* Top Actions: New chat button & Search chats directly underneath */}
-          <div className="px-2.5 pt-2 pb-1.5 flex flex-col gap-2 shrink-0">
+          <div className="px-2.5 pt-4 pb-1.5 flex flex-col gap-2 shrink-0">
             {/* Primary Action Button - New Chat on top */}
             <button
               type="button"
