@@ -318,8 +318,8 @@ export function Sidebar({
                   setTimeout(() => searchInputRef.current?.focus(), 150);
                 }}
                 className="w-7 h-7 rounded-md hover:bg-[#F0E9DE] text-[#716B62] hover:text-[#302D29] flex items-center justify-center transition-colors cursor-pointer"
-                title="Search conversations"
-                aria-label="Search conversations"
+                title="Search chats"
+                aria-label="Search chats"
               >
                 <Search className="w-3.5 h-3.5" />
               </button>
@@ -415,7 +415,7 @@ export function Sidebar({
                 <Search className="w-4.5 h-4.5 mx-auto mb-1.5 text-[#8B9D8C]" />
                 <p className="font-medium text-[#34382F] text-[11.5px]">No matches found</p>
                 <p className="text-[10.5px] mt-0.5 text-[#7A786F]">
-                  No conversation titled &ldquo;{searchQuery}&rdquo;
+                  No chat titled &ldquo;{searchQuery}&rdquo;
                 </p>
                 <button
                   type="button"
@@ -585,7 +585,7 @@ export function Sidebar({
 
           {/* Workspace footer with Search and New Conversation moved to the bottom */}
           <div className="px-2.5 py-2.5 pb-[calc(0.6rem+env(safe-area-inset-bottom,0px))] border-t border-[#D6CEC1] bg-[#ECE6DC]/90 backdrop-blur-xs shrink-0 flex flex-col gap-2 shadow-[0_-1px_3px_rgba(40,36,30,0.02)]">
-            {/* Search conversations */}
+            {/* Search chats */}
             <div className="relative flex items-center">
               <Search className="w-3.5 h-3.5 absolute left-2.5 text-[#88877C] pointer-events-none" />
               <input
@@ -598,9 +598,9 @@ export function Sidebar({
                     setSearchQuery("");
                   }
                 }}
-                placeholder="Search conversations..."
+                placeholder="Search chats"
                 className="w-full h-8 pl-8 pr-7 bg-[#FFFCF7] border border-[#D8CFC2] focus:border-[#536E59] rounded-lg text-[12px] text-[#2D2A26] placeholder-[#8E8A81] focus:outline-none focus:ring-1 focus:ring-[#536E59]/40 transition-colors shadow-2xs"
-                aria-label="Search conversations"
+                aria-label="Search chats"
               />
               {searchQuery && (
                 <button
