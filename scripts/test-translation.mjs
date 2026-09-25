@@ -60,12 +60,22 @@ async function runTests() {
     "TRANSLATION_MODEL_ID is google/gemma-4-26b-a4b-it"
   );
 
+  assert(
+    TRANSLATION_MODEL_INFO.id === TRANSLATION_MODEL_ID && TRANSLATION_MODEL_INFO.name === "Gemma 4 26B",
+    "TRANSLATION_MODEL_INFO matches TRANSLATION_MODEL_ID"
+  );
+
   const isUserSelectable = ALLOWED_MODELS.some(
     (m) => m.id === TRANSLATION_MODEL_ID
   );
   assert(
     !isUserSelectable,
     "Translation model is NOT in ALLOWED_MODELS (hidden from standard model selector dropdown)"
+  );
+
+  assert(
+    ALLOWED_MODEL_IDS.has(TRANSLATION_MODEL_ID),
+    "ALLOWED_MODEL_IDS set includes TRANSLATION_MODEL_ID for server authorization"
   );
 
   assert(
@@ -93,8 +103,8 @@ async function runTests() {
   console.log("\n--- Group 2: Supported Languages & Auto Detection ---");
 
   assert(
-    SOURCE_LANGUAGES[0].code === "auto" && SOURCE_LANGUAGES[0].name === "Auto Detect",
-    "SOURCE_LANGUAGES has Auto Detect as first choice"
+    SOURCE_LANGUAGES[0].code === SOURCE_LANGUAGE_AUTO.code && SOURCE_LANGUAGES[0].name === "Auto Detect",
+    "SOURCE_LANGUAGES has Auto Detect as first choice matching SOURCE_LANGUAGE_AUTO"
   );
 
   const hasAutoInTarget = SUPPORTED_LANGUAGES.some((l) => l.code === "auto");

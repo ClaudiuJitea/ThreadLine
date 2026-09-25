@@ -9,6 +9,7 @@ A private, single-user AI chat interface built with Next.js App Router, React, T
 - **Private Single-User Access**: Protected by a master password hashed with bcrypt and cryptographically signed session cookies.
 - **Multiple Models**: Query flagship, high-speed, coding, and image generation models via OpenRouter (GPT-6 Luna, MiMo v2.6 Flash, GLM-5.3 Flash, DeepSeek v4.1 Flash, and Recraft V4.1 Flash).
 - **Dedicated Translation Mode**: A dedicated Translate toggle in the composer powered by Google Gemma 4 26B (`google/gemma-4-26b-a4b-it`). Supports Auto Detect and 29 languages with a quick language swap button. Output is strictly translated text without conversational filler.
+- **Compact & Distraction-Free UI**: Streamlined compact top bar, retractable sidebar with quick-access conversation rail, and custom drag-to-resize width.
 - **Mid-Chat Model Switching**: Switch models mid-conversation with per-message model attribution.
 - **Web Search**: Real-time search integration with Tavily, providing inline citations and source previews.
 - **Image Generation**: Generate images with Recraft V4.1 Flash supporting multiple aspect ratios.
