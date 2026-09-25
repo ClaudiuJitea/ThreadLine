@@ -248,6 +248,17 @@ export function Sidebar({
                 </button>
               </div>
 
+              {/* New chat button at top of rail */}
+              <button
+                type="button"
+                onClick={handleNewChat}
+                className="w-7 h-7 rounded-md bg-[#536E59] hover:bg-[#405845] text-[#FFFCF7] flex items-center justify-center shadow-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50 active:scale-95 shrink-0 mt-0.5"
+                title="New chat"
+                aria-label="New chat"
+              >
+                <MessageCirclePlus className="w-3.5 h-3.5" />
+              </button>
+
               {/* Subtle Divider */}
               <div className="w-6 h-px bg-[#D8CFC2]/75 my-0.5" aria-hidden="true" />
 
@@ -321,17 +332,6 @@ export function Sidebar({
                 <Search className="w-3.5 h-3.5" />
               </button>
 
-              {/* New chat button at the bottom of the rail */}
-              <button
-                type="button"
-                onClick={handleNewChat}
-                className="w-7 h-7 rounded-md bg-[#536E59] hover:bg-[#405845] text-[#FFFCF7] flex items-center justify-center shadow-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50 active:scale-95 shrink-0"
-                title="New chat"
-                aria-label="New chat"
-              >
-                <MessageCirclePlus className="w-3.5 h-3.5" />
-              </button>
-
               <div
                 className="w-7 h-7 rounded-md flex items-center justify-center text-[#536E59] hover:bg-[#F0E9DE] cursor-help transition-colors"
                 title="Local Browser Storage: Chat history is saved solely on this device."
@@ -386,8 +386,22 @@ export function Sidebar({
             </button>
           </div>
 
+          {/* Primary Action Button - New Chat on top */}
+          <div className="px-2.5 pt-2.5 pb-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={handleNewChat}
+              className="w-full h-8.5 flex items-center justify-center gap-2 px-3 rounded-full bg-[#405B48] hover:bg-[#334B3B] text-[#FFFCF7] font-medium text-[12.5px] transition duration-150 cursor-pointer shadow-[0_2px_5px_rgba(47,71,53,0.12)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50"
+              title="New chat"
+              aria-label="New chat"
+            >
+              <MessageCirclePlus className="w-4 h-4" />
+              <span>New chat</span>
+            </button>
+          </div>
+
           {/* Conversation List */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-2.5 pt-2 pb-2">
+          <div className="flex-1 min-h-0 overflow-y-auto px-2.5 pt-1.5 pb-2">
             <div className="flex items-center justify-between px-1.5 py-1 mb-1.5 text-[10px]">
               <span className="font-semibold uppercase tracking-[0.11em] text-[#7A7469]">
                 {normalizedQuery ? "Search Results" : "Recent"}
@@ -611,18 +625,6 @@ export function Sidebar({
                 </button>
               )}
             </div>
-
-            {/* Primary Action Button properly aligned at the bottom */}
-            <button
-              type="button"
-              onClick={handleNewChat}
-              className="w-full h-8.5 flex items-center justify-center gap-2 px-3 rounded-full bg-[#405B48] hover:bg-[#334B3B] text-[#FFFCF7] font-medium text-[12.5px] transition duration-150 cursor-pointer shadow-[0_2px_5px_rgba(47,71,53,0.12)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/50"
-              title="New chat"
-              aria-label="New chat"
-            >
-              <MessageCirclePlus className="w-4 h-4" />
-              <span>New chat</span>
-            </button>
 
             {/* Storage status & Sign out row */}
             <div className="flex items-center justify-between px-1.5 py-0.5 text-[10px] text-[#7A786F]">
