@@ -289,14 +289,14 @@ export function Sidebar({
                       <button
                         type="button"
                         onClick={() => onSelectConversation(conv.id)}
-                        className={`w-7.5 h-7.5 rounded-md flex items-center justify-center transition-all cursor-pointer relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 ${
+                        className={`w-7.5 h-7.5 rounded-lg flex items-center justify-center transition-all cursor-pointer relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 ${
                           isActive
                             ? isFlagged
                               ? "bg-[#FFF9F6] text-[#C06A49] font-medium border border-[#DE9E87] shadow-xs ring-1 ring-[#C06A49]/35"
-                              : "bg-[#FFFCF7] text-[#536E59] font-medium border border-[#D5CDBD] shadow-xs ring-1 ring-[#536E59]/25"
+                              : "bg-[#FFFCF7] text-[#536E59] font-medium border border-[#536E59]/45 shadow-xs ring-1 ring-[#536E59]/25"
                             : isFlagged
-                            ? "bg-[#FAF3EE] text-[#C06A49] border border-[#E8D2C5] hover:bg-[#F6EBE2]"
-                            : "text-[#716B62] hover:bg-[#F0E9DE] hover:text-[#302D29]"
+                            ? "bg-[#FAF3EE] text-[#C06A49] border border-[#E8D2C5] hover:bg-[#F6EBE2] shadow-2xs"
+                            : "bg-[#FAF7F2]/80 border border-[#D6CEC1] text-[#716B62] hover:bg-[#FFFCF7] hover:border-[#BDB3A1] hover:text-[#302D29] shadow-2xs"
                         }`}
                         title={`${conv.title}${isFlagged ? " (Flagged)" : ""}`}
                         aria-label={conv.title}
@@ -443,7 +443,7 @@ export function Sidebar({
                   : conversations.length}
               </span>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
             {conversations.length === 0 ? (
               <div className="rounded-xl border border-dashed border-[#D7D0C4] bg-[#FAF7F1]/65 text-center py-6 px-3 text-xs text-[#625D55]">
                 <MessageSquare className="w-4.5 h-4.5 mx-auto mb-1.5 text-[#8B9D8C]" />
@@ -476,14 +476,14 @@ export function Sidebar({
                 return (
                   <div
                     key={conv.id}
-                    className={`group relative rounded-lg transition-all duration-150 flex items-center justify-between min-h-[38px] ${
+                    className={`group relative rounded-xl transition-all duration-150 flex items-center justify-between min-h-[40px] ${
                       isActive
                         ? isFlagged
-                          ? "bg-[#FFF8F5] text-[#1F1C18] border border-[#DE9E87] shadow-[0_2px_8px_rgba(192,106,73,0.14)] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-r-full before:bg-[#C06A49]"
-                          : "bg-[#FFFCF7] text-[#1F1C18] border border-[#DADFD2] shadow-2xs before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[2.5px] before:rounded-r-full before:bg-[#536E59]"
+                          ? "bg-[#FFF8F5] text-[#1F1C18] border border-[#DE9E87] shadow-[0_2px_8px_rgba(192,106,73,0.14)] ring-1 ring-[#C06A49]/20 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-[#C06A49]"
+                          : "bg-[#FFFCF7] text-[#1F1C18] border border-[#536E59]/45 shadow-xs ring-1 ring-[#536E59]/20 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-[#536E59]"
                         : isFlagged
-                        ? "bg-[#FAF2ED] text-[#2D231E] border border-[#E7D0C3] hover:bg-[#F6ECE4] hover:border-[#DE9E87] shadow-2xs before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2.5px] before:rounded-r-full before:bg-[#C06A49]/80"
-                        : "border border-transparent text-[#5C564E] hover:bg-[#EAE6DD] hover:text-[#1F1C18]"
+                        ? "bg-[#FAF2ED]/85 text-[#2D231E] border border-[#E5CEC1] hover:bg-[#FFF6F2] hover:border-[#DE9E87] shadow-2xs before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2.5px] before:rounded-r-full before:bg-[#C06A49]/70"
+                        : "bg-[#FAF7F2]/80 hover:bg-[#FFFCF7] border border-[#D6CEC1] hover:border-[#BDB3A1] text-[#484239] hover:text-[#1F1C18] shadow-2xs hover:shadow-xs"
                     }`}
                   >
                     {isEditing ? (
@@ -519,18 +519,18 @@ export function Sidebar({
                         <button
                           type="button"
                           onClick={() => onSelectConversation(conv.id)}
-                          className="flex-1 flex items-center gap-2.5 min-w-0 px-2 py-1.5 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 rounded-lg touch-manipulation"
+                          className="flex-1 flex items-center gap-2.5 min-w-0 px-2.5 py-1.5 text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 rounded-xl touch-manipulation"
                           title={conv.title}
                           aria-label={`Open conversation: ${conv.title}`}
                         >
                           {/* Icon Container with refined badge */}
                           <div
-                            className={`w-6.5 h-6.5 rounded-md flex items-center justify-center shrink-0 transition-colors ${
+                            className={`w-6.5 h-6.5 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                               isFlagged
                                 ? "bg-[#FBECE6] text-[#C06A49] border border-[#E8CEC3]"
                                 : isActive
-                                ? "bg-[#E7EFE4] text-[#405B48]"
-                                : "bg-[#EAE6DC] group-hover:bg-[#DDE5D9] text-[#77796F] group-hover:text-[#405B48]"
+                                ? "bg-[#E7EFE4] text-[#405B48] border border-[#C6DAC3]"
+                                : "bg-[#ECE5DB] group-hover:bg-[#E3DCCE] text-[#6E6C63] group-hover:text-[#405B48] border border-[#D8CEC0]"
                             }`}
                           >
                             {isFlagged ? (
@@ -549,13 +549,13 @@ export function Sidebar({
                                     ? "font-semibold text-[#1F1C18]"
                                     : isFlagged
                                     ? "font-semibold text-[#2D231E]"
-                                    : "font-medium text-[#484239] group-hover:text-[#1F1C18]"
+                                    : "font-medium text-[#38332B] group-hover:text-[#1F1C18]"
                                 }`}
                               >
                                 {conv.title}
                               </span>
                             </div>
-                            <span className="text-[10px] text-[#89877D] leading-none mt-0.5 truncate flex items-center gap-1.5 font-normal">
+                            <span className="text-[10px] text-[#7C796E] leading-none mt-0.5 truncate flex items-center gap-1.5 font-normal">
                               <span>{formatConversationDate(conv.updatedAt || conv.createdAt)}</span>
                               {conv.messages.length > 0 && (
                                 <>
@@ -570,7 +570,7 @@ export function Sidebar({
                         </button>
 
                         {/* Action buttons (Flag, Rename, Delete) */}
-                        <div className={`flex items-center gap-0.5 pr-1 transition-opacity shrink-0 ${
+                        <div className={`flex items-center gap-0.5 pr-1.5 transition-opacity shrink-0 ${
                           isFlagged
                             ? "opacity-100"
                             : "opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
@@ -585,7 +585,7 @@ export function Sidebar({
                               className={`w-5.5 h-5.5 rounded-md flex items-center justify-center transition-colors cursor-pointer ${
                                 isFlagged
                                   ? "text-[#C06A49] hover:bg-[#F4DCD5]"
-                                  : "hover:bg-[#E8DFD0] text-[#7A7369] hover:text-[#C06A49]"
+                                  : "hover:bg-[#EAE4D8] text-[#7A7369] hover:text-[#C06A49]"
                               }`}
                               title={isFlagged ? "Unflag conversation" : "Flag conversation"}
                               aria-label={isFlagged ? "Unflag conversation" : "Flag conversation"}
@@ -600,7 +600,7 @@ export function Sidebar({
                           <button
                             type="button"
                             onClick={(e) => startRename(conv, e)}
-                            className="w-5.5 h-5.5 rounded-md hover:bg-[#E8DFD0] text-[#7A7369] hover:text-[#1F1C18] flex items-center justify-center transition-colors cursor-pointer"
+                            className="w-5.5 h-5.5 rounded-md hover:bg-[#EAE4D8] text-[#7A7369] hover:text-[#1F1C18] flex items-center justify-center transition-colors cursor-pointer"
                             title="Rename chat"
                             aria-label="Rename chat"
                           >
