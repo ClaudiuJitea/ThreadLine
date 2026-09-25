@@ -217,17 +217,6 @@ export function Sidebar({
           </div>
         )}
 
-        {/* Toggle Sidebar Button - Centered on the boundary bar, styled with PanelLeft icon */}
-        <button
-          type="button"
-          onClick={onToggleOpen}
-          className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-50 w-6 h-6 rounded-md bg-[#FFFCF7] hover:bg-[#F2ECE2] border border-[#D6CEC1] hover:border-[#536E59] shadow-xs items-center justify-center text-[#536E59] transition-all duration-150 cursor-pointer active:scale-95 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[#EDE7DC]"
-          title={isOpen ? "Hide sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)"}
-          aria-label={isOpen ? "Hide sidebar" : "Expand sidebar"}
-        >
-          <PanelLeft className="w-3.5 h-3.5 text-[#536E59]" />
-        </button>
-
         {/* Content container with overflow-hidden to clip overflowing content smoothly during width transition */}
         <div className="w-full h-full overflow-hidden relative">
           {/* Desktop Compacted Rail View (visible when retracted) */}
