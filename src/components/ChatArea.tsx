@@ -29,7 +29,6 @@ import {
   Copy,
   Check,
   Pencil,
-  ChevronRight,
   Mail,
   FileEdit,
   Code2,
@@ -719,7 +718,7 @@ export function ChatArea({
           title="Show sidebar (Ctrl+B)"
           aria-label="Show sidebar"
         >
-          <ChevronRight className="w-3.5 h-3.5 text-[#536E59] group-hover:translate-x-0.5 transition-transform duration-150" />
+          <PanelLeft className="w-3.5 h-3.5 text-[#536E59]" />
         </button>
       )}
 
@@ -732,13 +731,15 @@ export function ChatArea({
         }`}
       >
         <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-          {/* Mobile Sidebar Toggle Button */}
+          {/* Sidebar Toggle Button */}
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="flex lg:hidden w-7 h-7 rounded-md bg-[#FFFCF7] hover:bg-[#EDE7DC] border border-[#D8CFC2] hover:border-[#536E59]/50 items-center justify-center text-[#536E59] shadow-2xs cursor-pointer active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40"
-            title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+            className={`w-7 h-7 rounded-md bg-[#FFFCF7] hover:bg-[#EDE7DC] border border-[#D6CEC1] hover:border-[#536E59]/50 items-center justify-center text-[#536E59] shadow-2xs cursor-pointer active:scale-95 transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 ${
+              isSidebarOpen ? "hidden" : "flex"
+            }`}
+            title="Open sidebar (Ctrl+B)"
+            aria-label="Open sidebar"
           >
             <PanelLeft className="w-3.5 h-3.5" />
           </button>

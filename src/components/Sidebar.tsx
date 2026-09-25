@@ -10,7 +10,7 @@ import {
   Check,
   X,
   LogOut,
-  ChevronLeft,
+  PanelLeft,
   HardDrive,
   Flag,
   Search,
@@ -217,21 +217,15 @@ export function Sidebar({
           </div>
         )}
 
-        {/* Toggle Sidebar Button - Centered on the boundary bar, glides with the border line */}
+        {/* Toggle Sidebar Button - Centered on the boundary bar, styled with PanelLeft icon */}
         <button
           type="button"
           onClick={onToggleOpen}
-          className="hidden lg:flex absolute -right-2.5 top-1/2 -translate-y-1/2 z-50 w-5 h-9 rounded-full bg-[#FFFCF7] hover:bg-[#F2ECE2] border border-[#D6CEC1] hover:border-[#536E59] shadow-[0_1px_4px_rgba(48,45,41,0.06),0_1px_2px_rgba(48,45,41,0.04)] hover:shadow-[0_3px_10px_rgba(83,110,89,0.18)] items-center justify-center text-[#536E59] transition-all duration-150 cursor-pointer active:scale-95 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[#EDE7DC]"
+          className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-50 w-6 h-6 rounded-md bg-[#FFFCF7] hover:bg-[#F2ECE2] border border-[#D6CEC1] hover:border-[#536E59] shadow-xs items-center justify-center text-[#536E59] transition-all duration-150 cursor-pointer active:scale-95 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[#EDE7DC]"
           title={isOpen ? "Hide sidebar (Ctrl+B)" : "Expand sidebar (Ctrl+B)"}
           aria-label={isOpen ? "Hide sidebar" : "Expand sidebar"}
         >
-          <ChevronLeft
-            className={`w-3 h-3 text-[#536E59] transition-transform duration-300 ease-in-out ${
-              isOpen
-                ? "group-hover:-translate-x-0.5"
-                : "rotate-180 group-hover:translate-x-0.5"
-            }`}
-          />
+          <PanelLeft className="w-3.5 h-3.5 text-[#536E59]" />
         </button>
 
         {/* Content container with overflow-hidden to clip overflowing content smoothly during width transition */}
@@ -383,15 +377,15 @@ export function Sidebar({
               </div>
             </div>
 
-            {/* Mobile close button */}
+            {/* Sidebar toggle button */}
             <button
               type="button"
               onClick={onToggleOpen}
-              className="lg:hidden w-7 h-7 rounded-md bg-[#FFFCF7] hover:bg-[#F2ECE2] border border-[#D8CFC2]/90 hover:border-[#536E59]/40 flex items-center justify-center text-[#536E59] shadow-2xs active:scale-95 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 shrink-0"
-              title="Close sidebar"
+              className="w-7 h-7 rounded-md bg-[#FFFCF7] hover:bg-[#F2ECE2] border border-[#D6CEC1] hover:border-[#536E59]/40 flex items-center justify-center text-[#536E59] shadow-2xs active:scale-95 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536E59]/40 shrink-0"
+              title="Close sidebar (Ctrl+B)"
               aria-label="Close sidebar"
             >
-              <ChevronLeft className="w-3.5 h-3.5 text-[#536E59]" />
+              <PanelLeft className="w-3.5 h-3.5 text-[#536E59]" />
             </button>
           </div>
 
