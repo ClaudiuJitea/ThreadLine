@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Sparkles, Brain, ChevronDown, ChevronUp } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
 
 interface ThinkingIndicatorProps {
   modelName?: string;
@@ -10,34 +10,57 @@ interface ThinkingIndicatorProps {
   startedAt?: number;
 }
 
-export function parseThinkingContent(raw: string): {
+export function parseThinkingContent(
+  rawContent?: string | null,
+  rawReasoning?: string | null
+): {
   thinking: string | null;
   content: string;
   isStillThinking: boolean;
 } {
-  if (!raw) {
-    return { thinking: null, content: "", isStillThinking: false };
-  }
+  const contentStr = rawContent || "";
+  const reasoningStr = rawReasoning?.trim() || null;
 
-  const thinkStart = raw.indexOf("<think>");
+  const thinkStart = contentStr.indexOf("<think>");
+
   if (thinkStart === -1) {
-    return { thinking: null, content: raw, isStillThinking: false };
+    if (reasoningStr) {
+      return {
+        thinking: reasoningStr,
+        content: contentStr,
+        isStillThinking: contentStr.trim().length === 0,
+      };
+    }
+    return {
+      thinking: null,
+      content: contentStr,
+      isStillThinking: false,
+    };
   }
 
-  const thinkEnd = raw.indexOf("</think>");
+  const thinkEnd = contentStr.indexOf("</think>");
   if (thinkEnd === -1) {
-    const thinkingText = raw.slice(thinkStart + 7).trim();
+    const thinkingFromContent = contentStr.slice(thinkStart + 7).trim();
+    const combinedThinking = reasoningStr
+      ? `${reasoningStr}\n${thinkingFromContent}`
+      : thinkingFromContent;
     return {
-      thinking: thinkingText,
-      content: raw.slice(0, thinkStart).trim(),
+      thinking: combinedThinking,
+      content: contentStr.slice(0, thinkStart).trim(),
       isStillThinking: true,
     };
   }
 
-  const thinkingText = raw.slice(thinkStart + 7, thinkEnd).trim();
-  const restContent = (raw.slice(0, thinkStart) + raw.slice(thinkEnd + 8)).trim();
+  const thinkingFromContent = contentStr.slice(thinkStart + 7, thinkEnd).trim();
+  const combinedThinking = reasoningStr
+    ? `${reasoningStr}\n${thinkingFromContent}`
+    : thinkingFromContent;
+  const restContent = (
+    contentStr.slice(0, thinkStart) + contentStr.slice(thinkEnd + 8)
+  ).trim();
+
   return {
-    thinking: thinkingText,
+    thinking: combinedThinking,
     content: restContent,
     isStillThinking: false,
   };
@@ -52,8 +75,6 @@ const THINKING_PHRASES = [
 ];
 
 export function ThinkingIndicator({
-  modelName = "AI Model",
-  modelProvider = "AI",
   streamingThoughts = null,
   startedAt,
 }: ThinkingIndicatorProps) {
@@ -76,55 +97,55 @@ export function ThinkingIndicator({
   useEffect(() => {
     const phraseTimer = setInterval(() => {
       setPhraseIndex((prev) => (prev + 1) % THINKING_PHRASES.length);
-    }, 2400);
+    }, 2200);
 
     return () => clearInterval(phraseTimer);
   }, []);
 
   return (
-    <div className="w-full max-w-2xl my-2 p-3.5 rounded-xl bg-[#FFFCF7] border border-[#536E59]/40 shadow-xs space-y-3 transition-all">
-      {/* Top Header Bar */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-6 h-6 rounded-lg bg-[#EDF3EB] border border-[#536E59]/30 flex items-center justify-center text-[#536E59] shadow-2xs shrink-0">
-            <Sparkles className="w-3.5 h-3.5" />
+    <div className="py-1 space-y-2.5">
+      {/* Primary Status Line: Bouncing Balls + Elapsed Time + Brain Icon + Cycling Feedback Text */}
+      <div className="flex items-center justify-between gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2.5 min-w-0">
+          {/* 3 Bouncing Balls Animation */}
+          <div className="flex items-center gap-1 shrink-0 py-0.5" aria-hidden="true">
+            <span
+              className="w-2 h-2 rounded-full bg-[#536E59] animate-bounce"
+              style={{ animationDelay: "-0.3s" }}
+            />
+            <span
+              className="w-2 h-2 rounded-full bg-[#536E59] animate-bounce"
+              style={{ animationDelay: "-0.15s" }}
+            />
+            <span
+              className="w-2 h-2 rounded-full bg-[#536E59] animate-bounce"
+            />
           </div>
 
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#DFE9DD] text-[#302D29] border border-[#536E59]/30 uppercase tracking-wider shrink-0">
-              {modelProvider}
+          {/* Feedback Text: Thinking + Elapsed Timer + Cycling Thought Phase */}
+          <div className="flex items-center gap-1.5 text-xs min-w-0 flex-wrap">
+            <span className="font-semibold text-[#536E59] shrink-0">
+              Thinking
             </span>
-            <span className="text-xs font-semibold text-[#302D29] truncate">
-              {modelName}
+            <span className="text-[11px] font-mono text-[#716B62] shrink-0 tabular-nums">
+              ({elapsed.toFixed(1)}s)
             </span>
-            <span className="text-[11px] text-[#536E59] font-mono shrink-0">
-              is thinking ({elapsed.toFixed(1)}s)
-            </span>
+            <span className="text-[#C4B9A9] shrink-0">•</span>
+            <div className="flex items-center gap-1.5 text-[11.5px] text-[#625D55] min-w-0">
+              <Brain className="w-3.5 h-3.5 text-[#536E59] shrink-0 animate-pulse" />
+              <span className="italic font-medium text-[#4A453E] truncate">
+                {THINKING_PHRASES[phraseIndex]}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Subtle Pulsing Dots */}
-        <div className="flex items-center gap-1 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#536E59] animate-bounce [animation-delay:-0.3s]" />
-          <span className="w-1.5 h-1.5 rounded-full bg-[#536E59] animate-bounce [animation-delay:-0.15s]" />
-          <span className="w-1.5 h-1.5 rounded-full bg-[#536E59] animate-bounce" />
-        </div>
-      </div>
-
-      {/* Dynamic Cycling Thought Phase */}
-      <div className="flex items-center justify-between text-[11.5px] px-2.5 py-1.5 rounded-lg bg-[#F8F5EF] border border-[#D8CFC2]/70 text-[#625D55]">
-        <div className="flex items-center gap-2 truncate">
-          <Brain className="w-3.5 h-3.5 text-[#536E59] shrink-0 animate-pulse" />
-          <span className="italic font-medium text-[#302D29] truncate">
-            {THINKING_PHRASES[phraseIndex]}
-          </span>
-        </div>
-
+        {/* View / Hide thoughts toggle button if streaming thoughts are available */}
         {streamingThoughts && (
           <button
             type="button"
             onClick={() => setIsThoughtStreamOpen(!isThoughtStreamOpen)}
-            className="flex items-center gap-1 text-[10px] font-mono text-[#536E59] hover:text-[#302D29] cursor-pointer shrink-0 ml-2"
+            className="flex items-center gap-1 text-[10.5px] font-mono text-[#536E59] hover:text-[#302D29] bg-[#E4DDD2]/60 hover:bg-[#E4DDD2] px-2 py-0.5 rounded border border-[#D8CFC2] cursor-pointer shrink-0 transition"
           >
             <span>{isThoughtStreamOpen ? "Hide thoughts" : "View thoughts"}</span>
             {isThoughtStreamOpen ? (
@@ -136,11 +157,11 @@ export function ThinkingIndicator({
         )}
       </div>
 
-      {/* Active Streaming Thoughts Transcript Drawer */}
+      {/* Streaming Thoughts Transcript Drawer */}
       {streamingThoughts && isThoughtStreamOpen && (
-        <div className="p-2.5 rounded-lg bg-[#FAF7F2] border border-[#D8CFC2] max-h-44 overflow-y-auto font-mono text-[11px] text-[#625D55] leading-relaxed whitespace-pre-wrap select-text">
+        <div className="p-3 rounded-lg bg-[#FAF7F2] border border-[#D8CFC2] max-h-48 overflow-y-auto font-mono text-[11px] text-[#625D55] leading-relaxed whitespace-pre-wrap select-text shadow-2xs">
           {streamingThoughts}
-          <span className="inline-block w-1.5 h-3 ml-1 bg-[#536E59] animate-pulse" />
+          <span className="inline-block w-1.5 h-3 ml-1 bg-[#536E59] animate-pulse align-middle" />
         </div>
       )}
     </div>
@@ -155,8 +176,23 @@ export function CompletedThoughtProcess({
   thoughts,
 }: CompletedThoughtProcessProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   if (!thoughts || thoughts.trim().length === 0) return null;
+
+  const handleCopyThoughts = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(thoughts);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  const wordCount = thoughts.trim().split(/\s+/).length;
+  const estimatedSeconds = Math.max(1, Math.round(wordCount / 25));
 
   return (
     <div className="mb-3 rounded-lg border border-[#D8CFC2] bg-[#FAF7F2] overflow-hidden text-xs shadow-2xs">
@@ -169,11 +205,29 @@ export function CompletedThoughtProcess({
           <Brain className="w-3.5 h-3.5 text-[#536E59]" />
           <span className="font-medium text-[11px]">Thought Process</span>
           <span className="text-[10px] font-mono text-[#716B62]">
-            ({Math.max(1, Math.round(thoughts.split(/\s+/).length / 25))}s reasoning)
+            ({estimatedSeconds}s reasoning)
           </span>
         </div>
 
-        <div className="flex items-center gap-1 text-[10px] text-[#716B62]">
+        <div className="flex items-center gap-2 text-[10px] text-[#716B62]">
+          <span
+            onClick={handleCopyThoughts}
+            className="hover:text-[#302D29] px-1 py-0.5 rounded hover:bg-[#E4DDD2] transition flex items-center gap-1"
+            title="Copy thought process"
+          >
+            {isCopied ? (
+              <>
+                <Check className="w-3 h-3 text-[#536E59]" />
+                <span className="text-[#536E59]">Copied</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3 h-3" />
+                <span>Copy</span>
+              </>
+            )}
+          </span>
+          <span className="text-[#D8CFC2]">•</span>
           <span>{isOpen ? "Collapse" : "Expand"}</span>
           {isOpen ? (
             <ChevronUp className="w-3.5 h-3.5" />

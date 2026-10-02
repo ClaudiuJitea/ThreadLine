@@ -486,7 +486,9 @@ export function ChatContainer() {
 
       const decoder = new TextDecoder("utf-8");
       let accumulatedText = "";
+      let accumulatedReasoning = "";
       let buffer = "";
+      let receivedDone = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -501,6 +503,7 @@ export function ChatContainer() {
           if (!trimmed || trimmed.startsWith(":")) continue;
 
           if (trimmed === "data: [DONE]") {
+            receivedDone = true;
             break;
           }
 
@@ -508,6 +511,16 @@ export function ChatContainer() {
             const dataStr = trimmed.substring(6);
             try {
               const parsed = JSON.parse(dataStr);
+
+              // Handle mid-stream error emitted by OpenRouter or upstream provider
+              if (parsed.error) {
+                const errMsg =
+                  typeof parsed.error === "string"
+                    ? parsed.error
+                    : parsed.error.message ||
+                      `Model provider error (${parsed.error.code || "unknown"})`;
+                throw new Error(errMsg);
+              }
 
               // Handle search sources metadata event
               if (parsed.type === "search_sources") {
@@ -562,7 +575,40 @@ export function ChatContainer() {
                 continue;
               }
 
-              const deltaContent = parsed.choices?.[0]?.delta?.content;
+              const choice = parsed.choices?.[0];
+              const delta = choice?.delta;
+              const deltaContent = delta?.content;
+              const deltaReasoning = delta?.reasoning || delta?.reasoning_content;
+              const finishReason = choice?.finish_reason;
+
+              if (finishReason === "length") {
+                accumulatedText += "\n\n*(Response reached maximum token limit.)*";
+              }
+
+              if (deltaReasoning) {
+                setIsSearchingWeb(false);
+                accumulatedReasoning += deltaReasoning;
+
+                setConversations((prev) =>
+                  prev.map((c) => {
+                    if (c.id === targetConversationId) {
+                      return {
+                        ...c,
+                        messages: c.messages.map((m) =>
+                          m.id === assistantMessageId
+                            ? {
+                                ...m,
+                                reasoning: accumulatedReasoning,
+                              }
+                            : m
+                        ),
+                      };
+                    }
+                    return c;
+                  })
+                );
+              }
+
               if (deltaContent) {
                 setIsSearchingWeb(false);
                 accumulatedText += deltaContent;
@@ -574,7 +620,11 @@ export function ChatContainer() {
                         ...c,
                         messages: c.messages.map((m) =>
                           m.id === assistantMessageId
-                            ? { ...m, content: accumulatedText }
+                            ? {
+                                ...m,
+                                content: accumulatedText,
+                                reasoning: accumulatedReasoning || m.reasoning,
+                              }
                             : m
                         ),
                       };
@@ -583,11 +633,26 @@ export function ChatContainer() {
                   })
                 );
               }
-            } catch {
+            } catch (jsonErr: unknown) {
+              // Re-throw genuine errors (such as parsed.error)
+              if (
+                jsonErr instanceof Error &&
+                !jsonErr.message.includes("Unexpected token") &&
+                !jsonErr.message.includes("JSON")
+              ) {
+                throw jsonErr;
+              }
               // Non-JSON SSE line or partial chunk, continue
             }
           }
         }
+      }
+
+      // Check if the stream stopped prematurely before completing or receiving content
+      if (!receivedDone && !accumulatedText.trim() && !accumulatedReasoning.trim()) {
+        throw new Error(
+          "Generation stopped unexpectedly before any response was received. The model provider connection may have timed out. Please click Retry."
+        );
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") {

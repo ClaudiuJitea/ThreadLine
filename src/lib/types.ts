@@ -80,6 +80,8 @@ export interface ChatMessage {
   // Optional translation metadata
   isTranslation?: boolean;
   translation?: TranslationMetadata;
+  // Optional reasoning/thinking process
+  reasoning?: string;
 }
 
 export interface Conversation {

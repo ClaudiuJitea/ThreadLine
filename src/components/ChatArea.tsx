@@ -1255,28 +1255,13 @@ export function ChatArea({
                         </p>
                       </div>
                     ) : (() => {
-                      const parsed = parseThinkingContent(message.content);
-                      const isWaitingFirstToken =
+                      const parsed = parseThinkingContent(message.content, message.reasoning);
+                      const isWaitingOrThinking =
                         isStreaming &&
                         isLastMessage &&
-                        (!message.content || message.content.trim().length === 0);
-                      const isThinking =
-                        isStreaming &&
-                        isLastMessage &&
-                        parsed.isStillThinking;
+                        (parsed.isStillThinking || !parsed.content || parsed.content.trim().length === 0);
 
-                      if (isThinking) {
-                        return (
-                          <ThinkingIndicator
-                            modelName={message.modelName || activeModel.name}
-                            modelProvider={message.modelProvider || activeModel.provider}
-                            streamingThoughts={parsed.thinking}
-                            startedAt={message.createdAt}
-                          />
-                        );
-                      }
-
-                      if (isWaitingFirstToken) {
+                      if (isWaitingOrThinking) {
                         if (activeModel.isImageGenerator) {
                           return (
                             <div className="flex items-center gap-2 py-1 text-xs text-[#536E59] font-medium animate-pulse">
@@ -1296,20 +1281,12 @@ export function ChatArea({
                         }
 
                         return (
-                          <div className="flex items-center gap-2 py-1 text-xs text-[#536E59]">
-                            <span
-                              className="w-2 h-2 rounded-full bg-[#536E59] animate-bounce"
-                              style={{ animationDelay: "-0.3s" }}
-                            />
-                            <span
-                              className="w-2 h-2 rounded-full bg-[#536E59] animate-bounce"
-                              style={{ animationDelay: "-0.15s" }}
-                            />
-                            <span
-                              className="w-2 h-2 rounded-full bg-[#536E59] animate-bounce"
-                            />
-                            <span className="text-[11px] text-[#716B62] ml-1">Writing answer...</span>
-                          </div>
+                          <ThinkingIndicator
+                            modelName={message.modelName || activeModel.name}
+                            modelProvider={message.modelProvider || activeModel.provider}
+                            streamingThoughts={parsed.thinking}
+                            startedAt={message.createdAt}
+                          />
                         );
                       }
 
@@ -1354,6 +1331,10 @@ export function ChatArea({
                                 })
                               }
                             />
+                          ) : !parsed.thinking && (!message.generatedImages || message.generatedImages.length === 0) && !isStreaming ? (
+                            <div className="text-xs text-[#716B62] italic py-1 flex items-center gap-1.5">
+                              <span>No response was generated. The connection may have been interrupted. Click Retry to try again.</span>
+                            </div>
                           ) : null}
 
                           {/* Web Search Sources Section (hidden by default, expandable) */}
@@ -1376,7 +1357,7 @@ export function ChatArea({
                       isLastMessage &&
                       message.role === "assistant" &&
                       message.content &&
-                      !parseThinkingContent(message.content).isStillThinking && (
+                      !parseThinkingContent(message.content, message.reasoning).isStillThinking && (
                         <span
                           className="inline-flex items-center gap-1 ml-1.5 align-middle py-0.5"
                           title="Generating response..."
@@ -1407,7 +1388,10 @@ export function ChatArea({
                         <div className="flex items-center gap-1.5">
                           <button
                             type="button"
-                            onClick={() => handleCopyMessage(message.content, message.id)}
+                            onClick={() => {
+                              const cleanContent = parseThinkingContent(message.content, message.reasoning).content;
+                              handleCopyMessage(cleanContent, message.id);
+                            }}
                             className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded hover:bg-[#F0E9DE] text-[#625D55] hover:text-[#302D29] transition cursor-pointer"
                             title="Copy response"
                           >

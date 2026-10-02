@@ -12,6 +12,10 @@ import {
   SearchExecutionResult,
 } from "@/lib/search";
 
+// Set maximum duration for long-running streaming / deep reasoning generations up to 5 minutes
+export const maxDuration = 300;
+export const dynamic = "force-dynamic";
+
 // Maximum allowable request body size for Vercel Hobby (2.5MB safety margin)
 const MAX_REQUEST_BYTES = 2.5 * 1024 * 1024;
 
@@ -407,7 +411,9 @@ export async function POST(request: Request) {
           model: targetModel,
           messages: outgoingMessages,
           stream: true,
+          include_reasoning: true,
         }),
+        signal: request.signal,
       }
     );
 
@@ -448,48 +454,71 @@ export async function POST(request: Request) {
       );
     }
 
-    // Stream SSE to the client
-    // If web search was executed, emit sources metadata event first, then pipe OpenRouter stream
-    if (isWebSearch && searchResult) {
-      const encoder = new TextEncoder();
-      const metadataEvent = `data: ${JSON.stringify({
-        type: "search_sources",
-        sources: searchResult.sources,
-        noResults: searchResult.noResults,
-      })}\n\n`;
+    // Stream SSE to the client with periodic keepalive heartbeats
+    const encoder = new TextEncoder();
+    const openRouterStream = openRouterResponse.body;
 
-      const stream = new ReadableStream({
-        async start(controller) {
+    const stream = new ReadableStream({
+      async start(controller) {
+        // If web search was executed, emit sources metadata event first
+        if (isWebSearch && searchResult) {
+          const metadataEvent = `data: ${JSON.stringify({
+            type: "search_sources",
+            sources: searchResult.sources,
+            noResults: searchResult.noResults,
+          })}\n\n`;
           controller.enqueue(encoder.encode(metadataEvent));
+        }
 
-          const reader = openRouterResponse.body!.getReader();
-          try {
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              controller.enqueue(value);
+        // Heartbeat timer: emit an SSE comment `: keepalive\n\n` every 15 seconds
+        // whenever the connection is idle (e.g. while model is calculating reasoning)
+        // to prevent Vercel, Cloudflare, proxies, and browsers from dropping the idle connection.
+        let keepAliveTimer: NodeJS.Timeout | null = null;
+        const resetKeepAlive = () => {
+          if (keepAliveTimer) clearInterval(keepAliveTimer);
+          keepAliveTimer = setInterval(() => {
+            try {
+              controller.enqueue(encoder.encode(": keepalive\n\n"));
+            } catch {
+              if (keepAliveTimer) clearInterval(keepAliveTimer);
             }
-          } catch (streamErr) {
-            controller.error(streamErr);
-          } finally {
-            controller.close();
+          }, 15000);
+        };
+
+        resetKeepAlive();
+
+        const reader = openRouterStream.getReader();
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            resetKeepAlive();
+            controller.enqueue(value);
           }
-        },
-      });
+        } catch (streamErr) {
+          if (!request.signal.aborted) {
+            console.error("[OpenRouter Stream Error]", streamErr);
+            controller.error(streamErr);
+          }
+        } finally {
+          if (keepAliveTimer) clearInterval(keepAliveTimer);
+          try {
+            controller.close();
+          } catch {
+            // Already closed
+          }
+        }
+      },
+      cancel() {
+        try {
+          openRouterStream.cancel();
+        } catch {
+          // ignore
+        }
+      },
+    });
 
-      return new Response(stream, {
-        status: 200,
-        headers: {
-          "Content-Type": "text/event-stream; charset=utf-8",
-          "Cache-Control": "no-cache, no-transform",
-          Connection: "keep-alive",
-          "X-Accel-Buffering": "no",
-        },
-      });
-    }
-
-    // Standard non-web streaming
-    return new Response(openRouterResponse.body, {
+    return new Response(stream, {
       status: 200,
       headers: {
         "Content-Type": "text/event-stream; charset=utf-8",
