@@ -1331,9 +1331,9 @@ export function ChatArea({
                                 })
                               }
                             />
-                          ) : !parsed.thinking && (!message.generatedImages || message.generatedImages.length === 0) && !isStreaming ? (
+                          ) : !isStreaming && (!message.generatedImages || message.generatedImages.length === 0) ? (
                             <div className="text-xs text-[#716B62] italic py-1 flex items-center gap-1.5">
-                              <span>No response was generated. The connection may have been interrupted. Click Retry to try again.</span>
+                              <span>No final answer text was produced by the model. Click Retry to generate again.</span>
                             </div>
                           ) : null}
 

@@ -411,7 +411,9 @@ export async function POST(request: Request) {
           model: targetModel,
           messages: outgoingMessages,
           stream: true,
-          include_reasoning: true,
+          reasoning: {
+            effort: "low",
+          },
         }),
         signal: request.signal,
       }

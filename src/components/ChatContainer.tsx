@@ -649,10 +649,34 @@ export function ChatContainer() {
       }
 
       // Check if the stream stopped prematurely before completing or receiving content
-      if (!receivedDone && !accumulatedText.trim() && !accumulatedReasoning.trim()) {
-        throw new Error(
-          "Generation stopped unexpectedly before any response was received. The model provider connection may have timed out. Please click Retry."
-        );
+      if (!accumulatedText.trim()) {
+        if (accumulatedReasoning.trim()) {
+          const timeoutNotice =
+            "*(The model concluded its reasoning phase but did not produce a final answer before the connection ended. Click Retry to generate with focused reasoning.)*";
+          setConversations((prev) =>
+            prev.map((c) => {
+              if (c.id === targetConversationId) {
+                return {
+                  ...c,
+                  messages: c.messages.map((m) =>
+                    m.id === assistantMessageId
+                      ? {
+                          ...m,
+                          content: timeoutNotice,
+                          reasoning: accumulatedReasoning,
+                        }
+                      : m
+                  ),
+                };
+              }
+              return c;
+            })
+          );
+        } else if (!receivedDone) {
+          throw new Error(
+            "Generation stopped unexpectedly before any response was received. The model provider connection may have timed out. Please click Retry."
+          );
+        }
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") {
