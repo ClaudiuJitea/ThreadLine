@@ -652,7 +652,7 @@ export function ChatContainer() {
       if (!accumulatedText.trim()) {
         if (accumulatedReasoning.trim()) {
           const timeoutNotice =
-            "*(The model concluded its reasoning phase but did not produce a final answer before the connection ended. Click Retry to generate with focused reasoning.)*";
+            "*(The model concluded its reasoning phase but did not output a final answer before the connection ended. Click Retry to generate the response.)*";
           setConversations((prev) =>
             prev.map((c) => {
               if (c.id === targetConversationId) {

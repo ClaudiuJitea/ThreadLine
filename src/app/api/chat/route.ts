@@ -383,16 +383,20 @@ export async function POST(request: Request) {
     ];
   }
 
-  // Ensure no message with completely empty content is sent to OpenRouter
-  outgoingMessages = outgoingMessages.filter((msg) => {
-    if (typeof msg.content === "string") {
-      return msg.content.trim().length > 0;
+  // Add foundational system instruction for deep reasoning models if none exists
+  if (!isTranslation && (!isWebSearch || !searchResult)) {
+    const hasSystemMessage = outgoingMessages.some((m) => m.role === "system");
+    if (!hasSystemMessage) {
+      outgoingMessages = [
+        {
+          role: "system",
+          content:
+            "You are a helpful, expert AI assistant. Think through complex problems with deep, rigorous analytical reasoning. Always conclude your thoughts and deliver your full, comprehensive answer in the final response.",
+        },
+        ...outgoingMessages,
+      ];
     }
-    if (Array.isArray(msg.content)) {
-      return msg.content.length > 0;
-    }
-    return Boolean(msg.content);
-  });
+  }
 
   // 11. Forward request to OpenRouter API
   try {
@@ -411,9 +415,12 @@ export async function POST(request: Request) {
           model: targetModel,
           messages: outgoingMessages,
           stream: true,
-          reasoning: {
-            effort: "low",
-          },
+          max_tokens: 16384,
+          reasoning: isTranslation
+            ? undefined
+            : {
+                effort: "high",
+              },
         }),
         signal: request.signal,
       }
@@ -484,7 +491,7 @@ export async function POST(request: Request) {
             } catch {
               if (keepAliveTimer) clearInterval(keepAliveTimer);
             }
-          }, 15000);
+          }, 9000);
         };
 
         resetKeepAlive();
