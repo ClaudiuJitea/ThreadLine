@@ -5,6 +5,7 @@ import {
   ChatMessage,
   AllowedModelId,
   ImageAttachmentMetadata,
+  ReasoningEffortLevel,
 } from "@/lib/types";
 import { getModelInfo } from "@/lib/models";
 import { MarkdownRenderer } from "./MarkdownRenderer";
@@ -18,6 +19,7 @@ import {
   AlertTriangle,
   Bot,
   User,
+  Brain,
   Sparkles,
   ShieldCheck,
   AlertCircle,
@@ -73,6 +75,17 @@ import {
 } from "./ThinkingIndicator";
 import { WebSearchSources } from "./WebSearchSources";
 
+export const REASONING_OPTIONS: Array<{
+  id: ReasoningEffortLevel;
+  label: string;
+  description: string;
+}> = [
+  { id: "low", label: "Low (Fast)", description: "Quick, concise thinking (~5–15s). Avoids timeouts." },
+  { id: "medium", label: "Medium (Balanced)", description: "Balanced analytical depth & response speed." },
+  { id: "high", label: "High (Deep)", description: "Exhaustive reasoning for complex architecture & logic." },
+  { id: "none", label: "Off", description: "Direct response with no reasoning phase." },
+];
+
 interface PreviewModalData {
   src: string;
   name: string;
@@ -104,7 +117,8 @@ interface ChatAreaProps {
     newContent: string
   ) => Promise<void>;
   onRetry: () => void;
-  onGenerateAnswer?: (messageId: string) => Promise<void>;
+  reasoningEffort?: ReasoningEffortLevel;
+  onChangeReasoningEffort?: (effort: ReasoningEffortLevel) => void;
   onStopGeneration: () => void;
   isConversationFlagged?: boolean;
   onToggleFlagConversation?: (conversationId: string) => void;
@@ -187,7 +201,8 @@ export function ChatArea({
   onSendMessage,
   onEditPrompt,
   onRetry,
-  onGenerateAnswer,
+  reasoningEffort = "medium",
+  onChangeReasoningEffort,
   onStopGeneration,
   onToggleFlagConversation,
   isStreaming,
@@ -220,6 +235,26 @@ export function ChatArea({
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editInputText, setEditInputText] = useState("");
   const [internalAspectRatio, setInternalAspectRatio] = useState<string>("1:1");
+  const [isReasoningMenuOpen, setIsReasoningMenuOpen] = useState(false);
+  const reasoningMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close reasoning menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        reasoningMenuRef.current &&
+        !reasoningMenuRef.current.contains(e.target as Node)
+      ) {
+        setIsReasoningMenuOpen(false);
+      }
+    };
+    if (isReasoningMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isReasoningMenuOpen]);
 
   const activeModel = getModelInfo(selectedModelId);
 
@@ -1335,45 +1370,9 @@ export function ChatArea({
                             />
                           ) : !isStreaming && (!message.generatedImages || message.generatedImages.length === 0) ? (
                             <div className="text-xs text-[#716B62] italic py-1 flex items-center gap-1.5">
-                              <span>No final answer text was produced by the model. Click Retry or Generate Answer below.</span>
+                              <span>No final answer text was produced by the model. Click Retry to generate again.</span>
                             </div>
                           ) : null}
-
-                          {/* If reasoning was completed but final answer was not streamed or was interrupted */}
-                          {!isStreaming &&
-                            message.reasoning &&
-                            (message.hasIncompleteAnswer ||
-                              parsed.content.includes("did not output a final answer") ||
-                              parsed.content.includes("concluded its reasoning phase") ||
-                              parsed.content.includes("serverless execution limit") ||
-                              !parsed.content.trim()) && (
-                              <div className="my-3 p-3.5 rounded-lg border border-[#C8DFCA] bg-[#F2F8F3] text-xs text-[#2E4733] shadow-2xs">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                  <div className="flex items-start gap-2.5">
-                                    <div className="p-1.5 rounded-full bg-[#E0EFE2] text-[#345339] shrink-0 mt-0.5">
-                                      <Sparkles className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                      <div className="font-semibold text-[#223927] text-[12px]">
-                                        Reasoning Complete ({Math.max(1, Math.round(message.reasoning.trim().split(/\s+/).length / 25))}s thoughts)
-                                      </div>
-                                      <div className="text-[11px] text-[#4F6A54] mt-0.5 leading-relaxed">
-                                        The model conducted thorough deep analytical thinking. Click below to stream the full final response directly without repeating the reasoning process.
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    disabled={isStreaming}
-                                    onClick={() => onGenerateAnswer?.(message.id)}
-                                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-md bg-[#436A49] text-white hover:bg-[#345339] transition shadow-xs cursor-pointer shrink-0 disabled:opacity-50"
-                                  >
-                                    <Sparkles className="w-3.5 h-3.5" />
-                                    <span>Generate Final Answer</span>
-                                  </button>
-                                </div>
-                              </div>
-                            )}
 
                           {/* Web Search Sources Section (hidden by default, expandable) */}
                           {message.sources && message.sources.length > 0 && (
@@ -1424,21 +1423,6 @@ export function ChatArea({
                           })}
                         </span>
                         <div className="flex items-center gap-1.5">
-                          {message.reasoning &&
-                            (message.hasIncompleteAnswer ||
-                              message.content.includes("did not output a final answer") ||
-                              message.content.includes("serverless execution limit")) && (
-                              <button
-                                type="button"
-                                disabled={isStreaming}
-                                onClick={() => onGenerateAnswer?.(message.id)}
-                                className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-[#E8F0E9] hover:bg-[#D5E5D7] text-[#345339] font-medium transition cursor-pointer"
-                                title="Stream answer from completed thoughts"
-                              >
-                                <Sparkles className="w-3 h-3 text-[#436A49]" />
-                                <span>Generate Answer</span>
-                              </button>
-                            )}
                           <button
                             type="button"
                             onClick={() => {
@@ -1765,6 +1749,62 @@ export function ChatArea({
                     <span className="w-1.5 h-1.5 rounded-full bg-[#A8D5B0] animate-pulse ml-0.5" />
                   )}
                 </button>
+
+                {/* Reasoning Effort Level Selector */}
+                {!activeModel.isImageGenerator && !isTranslateEnabled && (
+                  <div className="relative" ref={reasoningMenuRef}>
+                    <button
+                      type="button"
+                      onClick={() => setIsReasoningMenuOpen((prev) => !prev)}
+                      disabled={isStreaming}
+                      aria-expanded={isReasoningMenuOpen}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition duration-150 border cursor-pointer ${
+                        reasoningEffort === "none"
+                          ? "bg-[#FFFCF7] text-[#716B62] border-[#D8CFC2] hover:bg-[#F0E9DE] hover:text-[#302D29]"
+                          : "bg-[#FFFCF7] text-[#536E59] border-[#D8CFC2] hover:bg-[#F0E9DE] hover:border-[#536E59]/40"
+                      } ${isStreaming ? "opacity-40 cursor-not-allowed" : ""}`}
+                      title={`Reasoning effort: ${reasoningEffort.toUpperCase()} (Click to change)`}
+                    >
+                      <Brain className="w-3.5 h-3.5 text-[#536E59]" />
+                      <span className="capitalize">{reasoningEffort === "none" ? "Think: Off" : `Think: ${reasoningEffort}`}</span>
+                      <ChevronDown className="w-3 h-3 text-[#716B62]" />
+                    </button>
+
+                    {isReasoningMenuOpen && (
+                      <div className="absolute bottom-full mb-1.5 left-0 w-56 bg-[#FFFCF7] rounded-xl border border-[#D8CFC2] shadow-lg py-1.5 z-30 text-xs animate-in fade-in zoom-in-95 duration-100">
+                        <div className="px-3 py-1 border-b border-[#D8CFC2]/60 font-semibold text-[10px] text-[#716B62] uppercase tracking-wider">
+                          Reasoning Effort
+                        </div>
+                        {REASONING_OPTIONS.map((opt) => {
+                          const isSelected = reasoningEffort === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => {
+                                onChangeReasoningEffort?.(opt.id);
+                                setIsReasoningMenuOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 flex flex-col gap-0.5 hover:bg-[#F0E9DE] transition cursor-pointer ${
+                                isSelected ? "bg-[#EDE7DC]/70 font-medium" : ""
+                              }`}
+                            >
+                              <div className="flex items-center justify-between text-[#302D29]">
+                                <span className={`font-medium ${isSelected ? "text-[#536E59]" : ""}`}>
+                                  {opt.label}
+                                </span>
+                                {isSelected && <Check className="w-3.5 h-3.5 text-[#536E59]" />}
+                              </div>
+                              <span className="text-[10px] text-[#716B62] leading-tight">
+                                {opt.description}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Language Selection controls when Translate is active */}
                 {isTranslateEnabled && !activeModel.isImageGenerator && (

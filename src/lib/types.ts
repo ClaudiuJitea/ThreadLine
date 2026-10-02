@@ -57,6 +57,8 @@ export interface TranslationMetadata {
   targetName: string;
 }
 
+export type ReasoningEffortLevel = "low" | "medium" | "high" | "none";
+
 export interface ChatMessage {
   id: string;
   role: MessageRole;
@@ -82,8 +84,8 @@ export interface ChatMessage {
   translation?: TranslationMetadata;
   // Optional reasoning/thinking process
   reasoning?: string;
-  // Marker indicating reasoning finished or stream interrupted before final answer
-  hasIncompleteAnswer?: boolean;
+  // Reasoning effort level used
+  reasoningEffort?: ReasoningEffortLevel;
 }
 
 export interface Conversation {
@@ -115,7 +117,7 @@ export interface ChatRequestBody {
     source: string;
     target: string;
   };
-  continuationReasoning?: string;
+  reasoningEffort?: ReasoningEffortLevel;
 }
 
 export interface LoginResponse {
