@@ -652,7 +652,7 @@ export function ChatContainer() {
       if (!accumulatedText.trim()) {
         if (accumulatedReasoning.trim()) {
           const timeoutNotice =
-            "*(The model concluded its reasoning phase but did not output a final answer before the connection ended. Click Retry to generate the response.)*";
+            "*(The model concluded its reasoning phase but did not output a final answer before the connection ended. Click 'Generate Final Answer' below to stream the full response.)*";
           setConversations((prev) =>
             prev.map((c) => {
               if (c.id === targetConversationId) {
@@ -664,6 +664,7 @@ export function ChatContainer() {
                           ...m,
                           content: timeoutNotice,
                           reasoning: accumulatedReasoning,
+                          hasIncompleteAnswer: true,
                         }
                       : m
                   ),
@@ -783,6 +784,190 @@ export function ChatContainer() {
     );
   };
 
+  const handleGenerateAnswer = async (messageId: string) => {
+    if (!activeConversation || isStreaming) return;
+
+    const msgs = activeConversation.messages;
+    const asstIndex = msgs.findIndex((m) => m.id === messageId);
+    if (asstIndex === -1) return;
+
+    const asstMsg = msgs[asstIndex];
+    const reasoning = asstMsg.reasoning;
+    if (!reasoning) return;
+
+    // Find the corresponding user prompt
+    let userPrompt = "";
+    let userAttachments: ImageAttachmentMetadata[] = [];
+    for (let i = asstIndex - 1; i >= 0; i--) {
+      if (msgs[i].role === "user") {
+        userPrompt = msgs[i].content;
+        userAttachments = msgs[i].attachments || [];
+        break;
+      }
+    }
+
+    if (!userPrompt) return;
+
+    const historyUpToUser = msgs.slice(0, asstIndex);
+    const targetModelId = asstMsg.modelId || selectedModelId;
+
+    // Reset this assistant message content to empty, keep reasoning, remove hasIncompleteAnswer
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.id === activeConversation.id) {
+          return {
+            ...c,
+            messages: c.messages.map((m) =>
+              m.id === messageId
+                ? {
+                    ...m,
+                    content: "",
+                    isError: false,
+                    hasIncompleteAnswer: false,
+                  }
+                : m
+            ),
+          };
+        }
+        return c;
+      })
+    );
+
+    setIsStreaming(true);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      const { payloadMessages } = buildPayloadWithBudgetControl(
+        historyUpToUser,
+        userPrompt,
+        userAttachments,
+        { model: targetModelId, webSearch: false, aspectRatio: selectedAspectRatio }
+      );
+
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: targetModelId,
+          messages: payloadMessages,
+          continuationReasoning: reasoning,
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        let errDetail = `Server error (${response.status})`;
+        try {
+          const j = await response.json();
+          if (j.error) errDetail = j.error;
+        } catch {
+          const t = await response.text();
+          if (t) errDetail = t;
+        }
+        throw new Error(errDetail);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No readable stream received.");
+
+      const decoder = new TextDecoder("utf-8");
+      let accumulatedText = "";
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith(":")) continue;
+          if (trimmed === "data: [DONE]") break;
+
+          if (trimmed.startsWith("data: ")) {
+            try {
+              const parsed = JSON.parse(trimmed.substring(6));
+              if (parsed.error) {
+                throw new Error(
+                  typeof parsed.error === "string"
+                    ? parsed.error
+                    : parsed.error.message || "Provider error"
+                );
+              }
+              const deltaContent = parsed.choices?.[0]?.delta?.content;
+              if (deltaContent) {
+                accumulatedText += deltaContent;
+                setConversations((prev) =>
+                  prev.map((c) => {
+                    if (c.id === activeConversation.id) {
+                      return {
+                        ...c,
+                        messages: c.messages.map((m) =>
+                          m.id === messageId
+                            ? {
+                                ...m,
+                                content: accumulatedText,
+                                reasoning,
+                                hasIncompleteAnswer: false,
+                              }
+                            : m
+                        ),
+                      };
+                    }
+                    return c;
+                  })
+                );
+              }
+            } catch (jsonErr) {
+              if (
+                jsonErr instanceof Error &&
+                !jsonErr.message.includes("Unexpected token") &&
+                !jsonErr.message.includes("JSON")
+              ) {
+                throw jsonErr;
+              }
+            }
+          }
+        }
+      }
+
+      if (!accumulatedText.trim()) {
+        throw new Error("No final response text was generated. Please try again.");
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to generate answer from thoughts.";
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === activeConversation.id) {
+            return {
+              ...c,
+              messages: c.messages.map((m) =>
+                m.id === messageId
+                  ? {
+                      ...m,
+                      content: errorMsg,
+                      isError: true,
+                      hasIncompleteAnswer: true,
+                    }
+                  : m
+              ),
+            };
+          }
+          return c;
+        })
+      );
+    } finally {
+      setIsStreaming(false);
+      abortControllerRef.current = null;
+    }
+  };
+
   const handleToggleFlagConversation = useCallback((conversationId: string) => {
     setConversations((prev) =>
       prev.map((c) => {
@@ -825,6 +1010,7 @@ export function ChatContainer() {
         onSendMessage={handleSendMessage}
         onEditPrompt={handleEditPrompt}
         onRetry={handleRetry}
+        onGenerateAnswer={handleGenerateAnswer}
         onStopGeneration={handleStopGeneration}
         onToggleFlagConversation={handleToggleFlagConversation}
         isStreaming={isStreaming}

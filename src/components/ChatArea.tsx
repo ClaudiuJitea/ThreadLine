@@ -104,6 +104,7 @@ interface ChatAreaProps {
     newContent: string
   ) => Promise<void>;
   onRetry: () => void;
+  onGenerateAnswer?: (messageId: string) => Promise<void>;
   onStopGeneration: () => void;
   isConversationFlagged?: boolean;
   onToggleFlagConversation?: (conversationId: string) => void;
@@ -186,6 +187,7 @@ export function ChatArea({
   onSendMessage,
   onEditPrompt,
   onRetry,
+  onGenerateAnswer,
   onStopGeneration,
   onToggleFlagConversation,
   isStreaming,
@@ -1333,9 +1335,45 @@ export function ChatArea({
                             />
                           ) : !isStreaming && (!message.generatedImages || message.generatedImages.length === 0) ? (
                             <div className="text-xs text-[#716B62] italic py-1 flex items-center gap-1.5">
-                              <span>No final answer text was produced by the model. Click Retry to generate again.</span>
+                              <span>No final answer text was produced by the model. Click Retry or Generate Answer below.</span>
                             </div>
                           ) : null}
+
+                          {/* If reasoning was completed but final answer was not streamed or was interrupted */}
+                          {!isStreaming &&
+                            message.reasoning &&
+                            (message.hasIncompleteAnswer ||
+                              parsed.content.includes("did not output a final answer") ||
+                              parsed.content.includes("concluded its reasoning phase") ||
+                              parsed.content.includes("serverless execution limit") ||
+                              !parsed.content.trim()) && (
+                              <div className="my-3 p-3.5 rounded-lg border border-[#C8DFCA] bg-[#F2F8F3] text-xs text-[#2E4733] shadow-2xs">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                  <div className="flex items-start gap-2.5">
+                                    <div className="p-1.5 rounded-full bg-[#E0EFE2] text-[#345339] shrink-0 mt-0.5">
+                                      <Sparkles className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                      <div className="font-semibold text-[#223927] text-[12px]">
+                                        Reasoning Complete ({Math.max(1, Math.round(message.reasoning.trim().split(/\s+/).length / 25))}s thoughts)
+                                      </div>
+                                      <div className="text-[11px] text-[#4F6A54] mt-0.5 leading-relaxed">
+                                        The model conducted thorough deep analytical thinking. Click below to stream the full final response directly without repeating the reasoning process.
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    disabled={isStreaming}
+                                    onClick={() => onGenerateAnswer?.(message.id)}
+                                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-md bg-[#436A49] text-white hover:bg-[#345339] transition shadow-xs cursor-pointer shrink-0 disabled:opacity-50"
+                                  >
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    <span>Generate Final Answer</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
 
                           {/* Web Search Sources Section (hidden by default, expandable) */}
                           {message.sources && message.sources.length > 0 && (
@@ -1386,6 +1424,21 @@ export function ChatArea({
                           })}
                         </span>
                         <div className="flex items-center gap-1.5">
+                          {message.reasoning &&
+                            (message.hasIncompleteAnswer ||
+                              message.content.includes("did not output a final answer") ||
+                              message.content.includes("serverless execution limit")) && (
+                              <button
+                                type="button"
+                                disabled={isStreaming}
+                                onClick={() => onGenerateAnswer?.(message.id)}
+                                className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-[#E8F0E9] hover:bg-[#D5E5D7] text-[#345339] font-medium transition cursor-pointer"
+                                title="Stream answer from completed thoughts"
+                              >
+                                <Sparkles className="w-3 h-3 text-[#436A49]" />
+                                <span>Generate Answer</span>
+                              </button>
+                            )}
                           <button
                             type="button"
                             onClick={() => {

@@ -337,8 +337,10 @@ export async function POST(request: Request) {
     }
   }
 
-  // 10. Prepare messages for OpenRouter (Translation, Web Search, or Standard)
+  // 10. Prepare messages for OpenRouter (Translation, Web Search, Continuation, or Standard)
   let outgoingMessages = messages;
+  const isContinuation = Boolean(body.continuationReasoning?.trim());
+
   if (isTranslation) {
     let latestUserPrompt = "";
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -372,6 +374,18 @@ export async function POST(request: Request) {
       { role: "system", content: translationPrompt },
       { role: "user", content: latestUserPrompt },
     ];
+  } else if (isContinuation && body.continuationReasoning) {
+    const continuationSystemPrompt =
+      "You are an expert AI assistant continuing a response where the analytical reasoning phase has already been conducted as follows:\n\n" +
+      "<reasoning_context>\n" +
+      body.continuationReasoning +
+      "\n</reasoning_context>\n\n" +
+      "Based on this completed reasoning, immediately produce the complete, final answer with all requested code and implementation details. Do not repeat or explain the reasoning phase; deliver the comprehensive final response directly.";
+
+    outgoingMessages = [
+      { role: "system", content: continuationSystemPrompt },
+      ...messages.filter((m) => m.role !== "system"),
+    ];
   } else if (isWebSearch && searchResult) {
     const webSearchInstruction = formatSourcesForOpenRouterPrompt(
       searchResult.sources,
@@ -384,14 +398,14 @@ export async function POST(request: Request) {
   }
 
   // Add foundational system instruction for deep reasoning models if none exists
-  if (!isTranslation && (!isWebSearch || !searchResult)) {
+  if (!isTranslation && !isContinuation && (!isWebSearch || !searchResult)) {
     const hasSystemMessage = outgoingMessages.some((m) => m.role === "system");
     if (!hasSystemMessage) {
       outgoingMessages = [
         {
           role: "system",
           content:
-            "You are a helpful, expert AI assistant. Think through complex problems with deep, rigorous analytical reasoning. Always conclude your thoughts and deliver your full, comprehensive answer in the final response.",
+            "You are an expert AI assistant with highest-tier deep reasoning capabilities. When reasoning through complex problems:\n1. Conduct deep, rigorous analytical evaluation of the architecture, algorithms, logic, and edge cases.\n2. Keep your internal thinking focused on analytical planning; do not write out complete, full implementations or duplicate extensive code blocks inside the reasoning block.\n3. Conclude your thinking efficiently and transition to delivering the complete, fully implemented response and all requested code in your final answer.",
         },
         ...outgoingMessages,
       ];
@@ -416,7 +430,7 @@ export async function POST(request: Request) {
           messages: outgoingMessages,
           stream: true,
           max_tokens: 16384,
-          reasoning: isTranslation
+          reasoning: isTranslation || isContinuation
             ? undefined
             : {
                 effort: "high",
@@ -466,6 +480,7 @@ export async function POST(request: Request) {
     // Stream SSE to the client with periodic keepalive heartbeats
     const encoder = new TextEncoder();
     const openRouterStream = openRouterResponse.body;
+    let deadlineTimer: NodeJS.Timeout | null = null;
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -479,7 +494,7 @@ export async function POST(request: Request) {
           controller.enqueue(encoder.encode(metadataEvent));
         }
 
-        // Heartbeat timer: emit an SSE comment `: keepalive\n\n` every 15 seconds
+        // Heartbeat timer: emit an SSE comment `: keepalive\n\n` every 9 seconds
         // whenever the connection is idle (e.g. while model is calculating reasoning)
         // to prevent Vercel, Cloudflare, proxies, and browsers from dropping the idle connection.
         let keepAliveTimer: NodeJS.Timeout | null = null;
@@ -496,6 +511,35 @@ export async function POST(request: Request) {
 
         resetKeepAlive();
 
+        // Safety deadline timer:
+        // Vercel Hobby strictly terminates the execution environment after 300 seconds.
+        // To prevent an abrupt container crash and dropped connection, preemptively close cleanly at 285s.
+        deadlineTimer = setTimeout(() => {
+          try {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({
+                  choices: [
+                    {
+                      delta: {
+                        content:
+                          "\n\n*(Thinking reached the serverless execution limit before final output could complete. Click 'Generate Final Answer' below to stream the full answer instantly from these completed thoughts.)*",
+                      },
+                    },
+                  ],
+                })}\n\n`
+              )
+            );
+          } catch {
+            // ignore
+          }
+          try {
+            controller.close();
+          } catch {
+            // ignore
+          }
+        }, 285000);
+
         const reader = openRouterStream.getReader();
         try {
           while (true) {
@@ -510,6 +554,7 @@ export async function POST(request: Request) {
             controller.error(streamErr);
           }
         } finally {
+          if (deadlineTimer) clearTimeout(deadlineTimer);
           if (keepAliveTimer) clearInterval(keepAliveTimer);
           try {
             controller.close();
@@ -519,6 +564,7 @@ export async function POST(request: Request) {
         }
       },
       cancel() {
+        if (deadlineTimer) clearTimeout(deadlineTimer);
         try {
           openRouterStream.cancel();
         } catch {
