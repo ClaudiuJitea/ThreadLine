@@ -15,6 +15,10 @@ export interface ModelOption {
   badge: string;
   isImageGenerator?: boolean;
   supportedAspectRatios?: readonly string[];
+  supportsReasoning?: boolean;
+  nativeReasoning?: boolean;
+  reasoningEfforts?: readonly ReasoningEffortLevel[];
+  reasoningNote?: string;
 }
 
 export type MessageRole = "user" | "assistant" | "system";

@@ -1292,7 +1292,15 @@ export function ChatArea({
                         </p>
                       </div>
                     ) : (() => {
-                      const parsed = parseThinkingContent(message.content, message.reasoning);
+                      const isReasoningOff =
+                        message.reasoningEffort === "none" ||
+                        Boolean(message.isTranslation) ||
+                        Boolean(activeModel.isImageGenerator);
+                      const parsed = parseThinkingContent(
+                        message.content,
+                        message.reasoning,
+                        isReasoningOff
+                      );
                       const isWaitingOrThinking =
                         isStreaming &&
                         isLastMessage &&
@@ -1317,6 +1325,27 @@ export function ChatArea({
                           );
                         }
 
+                        if (isReasoningOff) {
+                          return (
+                            <div className="flex items-center gap-2 py-1 text-xs text-[#536E59] font-medium">
+                              <div className="flex items-center gap-1 shrink-0 py-0.5" aria-hidden="true">
+                                <span
+                                  className="w-2 h-2 rounded-full bg-[#536E59] animate-bounce"
+                                  style={{ animationDelay: "-0.3s" }}
+                                />
+                                <span
+                                  className="w-2 h-2 rounded-full bg-[#536E59] animate-bounce"
+                                  style={{ animationDelay: "-0.15s" }}
+                                />
+                                <span
+                                  className="w-2 h-2 rounded-full bg-[#536E59] animate-bounce"
+                                />
+                              </div>
+                              <span className="text-[#625D55]">Generating response...</span>
+                            </div>
+                          );
+                        }
+
                         return (
                           <ThinkingIndicator
                             modelName={message.modelName || activeModel.name}
@@ -1329,7 +1358,7 @@ export function ChatArea({
 
                       return (
                         <div>
-                          {parsed.thinking && (
+                          {!isReasoningOff && parsed.thinking && (
                             <CompletedThoughtProcess thoughts={parsed.thinking} />
                           )}
 
@@ -1394,7 +1423,11 @@ export function ChatArea({
                       isLastMessage &&
                       message.role === "assistant" &&
                       message.content &&
-                      !parseThinkingContent(message.content, message.reasoning).isStillThinking && (
+                      !parseThinkingContent(
+                        message.content,
+                        message.reasoning,
+                        message.reasoningEffort === "none" || Boolean(message.isTranslation)
+                      ).isStillThinking && (
                         <span
                           className="inline-flex items-center gap-1 ml-1.5 align-middle py-0.5"
                           title="Generating response..."
@@ -1426,7 +1459,11 @@ export function ChatArea({
                           <button
                             type="button"
                             onClick={() => {
-                              const cleanContent = parseThinkingContent(message.content, message.reasoning).content;
+                              const cleanContent = parseThinkingContent(
+                                message.content,
+                                message.reasoning,
+                                message.reasoningEffort === "none" || Boolean(message.isTranslation)
+                              ).content;
                               handleCopyMessage(cleanContent, message.id);
                             }}
                             className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded hover:bg-[#F0E9DE] text-[#625D55] hover:text-[#302D29] transition cursor-pointer"
@@ -1771,10 +1808,22 @@ export function ChatArea({
                     </button>
 
                     {isReasoningMenuOpen && (
-                      <div className="absolute bottom-full mb-1.5 left-0 w-56 bg-[#FFFCF7] rounded-xl border border-[#D8CFC2] shadow-lg py-1.5 z-30 text-xs animate-in fade-in zoom-in-95 duration-100">
-                        <div className="px-3 py-1 border-b border-[#D8CFC2]/60 font-semibold text-[10px] text-[#716B62] uppercase tracking-wider">
-                          Reasoning Effort
+                      <div className="absolute bottom-full mb-1.5 left-0 w-64 bg-[#FFFCF7] rounded-xl border border-[#D8CFC2] shadow-lg py-1.5 z-30 text-xs animate-in fade-in zoom-in-95 duration-100">
+                        <div className="px-3 py-1 border-b border-[#D8CFC2]/60 flex items-center justify-between">
+                          <span className="font-semibold text-[10px] text-[#716B62] uppercase tracking-wider">
+                            Reasoning Effort
+                          </span>
+                          {activeModel.nativeReasoning && (
+                            <span className="text-[9px] font-medium px-1.5 py-0.2 rounded bg-[#DFE9DD] text-[#302D29] border border-[#536E59]/30">
+                              Native Thinking
+                            </span>
+                          )}
                         </div>
+                        {activeModel.reasoningNote && (
+                          <div className="px-3 py-1.5 text-[10px] text-[#716B62] bg-[#FAF7F2] border-b border-[#D8CFC2]/40 leading-snug">
+                            {activeModel.reasoningNote}
+                          </div>
+                        )}
                         {REASONING_OPTIONS.map((opt) => {
                           const isSelected = reasoningEffort === opt.id;
                           return (

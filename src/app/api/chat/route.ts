@@ -384,27 +384,40 @@ export async function POST(request: Request) {
     ];
   }
 
-  // Add foundational system instruction if none exists
-  if (!isTranslation && (!isWebSearch || !searchResult)) {
-    const hasSystemMessage = outgoingMessages.some((m) => m.role === "system");
-    if (!hasSystemMessage) {
-      outgoingMessages = [
-        {
-          role: "system",
-          content:
-            "You are a helpful, expert AI assistant. Think through problems with analytical reasoning when needed, and deliver your full, comprehensive answer in the final response.",
-        },
-        ...outgoingMessages,
-      ];
-    }
-  }
-
   // Determine reasoning effort level chosen by user (default to "medium")
   const validEfforts = ["low", "medium", "high", "none"] as const;
   const reasoningEffort =
     body.reasoningEffort && validEfforts.includes(body.reasoningEffort)
       ? body.reasoningEffort
       : "medium";
+
+  const isReasoningDisabled = isTranslation || reasoningEffort === "none";
+
+  // Add foundational system instruction if none exists
+  if (!isTranslation && (!isWebSearch || !searchResult)) {
+    const hasSystemMessage = outgoingMessages.some((m) => m.role === "system");
+    if (!hasSystemMessage) {
+      let systemInstruction = "You are a helpful, expert AI assistant.";
+      if (isReasoningDisabled) {
+        systemInstruction +=
+          " Provide your response directly, concisely, and completely. Do NOT output internal thinking, chain-of-thought analysis, or <think> tags.";
+      } else if (reasoningEffort === "low") {
+        systemInstruction +=
+          " Keep any internal analytical reasoning concise and focused (~5–15 seconds), and deliver your full, comprehensive answer in the final response.";
+      } else {
+        systemInstruction +=
+          " Think through problems with analytical reasoning when needed, and deliver your full, comprehensive answer in the final response.";
+      }
+
+      outgoingMessages = [
+        {
+          role: "system",
+          content: systemInstruction,
+        },
+        ...outgoingMessages,
+      ];
+    }
+  }
 
   // 11. Forward request to OpenRouter API
   try {
@@ -424,11 +437,18 @@ export async function POST(request: Request) {
           messages: outgoingMessages,
           stream: true,
           max_tokens: 16384,
-          reasoning: isTranslation || reasoningEffort === "none"
-            ? undefined
+          reasoning: isReasoningDisabled
+            ? {
+                enabled: false,
+                effort: "none",
+                exclude: true,
+              }
             : {
+                enabled: true,
                 effort: reasoningEffort,
+                exclude: false,
               },
+          include_reasoning: !isReasoningDisabled,
         }),
         signal: request.signal,
       }

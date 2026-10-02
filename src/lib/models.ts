@@ -8,6 +8,10 @@ export const ALLOWED_MODELS: readonly ModelOption[] = [
     description: "Next-gen flagship intelligence, deep reasoning, and multimodal capabilities",
     supportsImages: true,
     badge: "Flagship",
+    supportsReasoning: true,
+    nativeReasoning: false,
+    reasoningEfforts: ["low", "medium", "high", "none"],
+    reasoningNote: "Full reasoning control. Supports Low/Med/High effort or can be toggled completely Off.",
   },
   {
     id: "xiaomi/mimo-v2.6-flash",
@@ -16,6 +20,10 @@ export const ALLOWED_MODELS: readonly ModelOption[] = [
     description: "High-speed multimodal conversational model optimized for rapid response",
     supportsImages: true,
     badge: "Fast Vision",
+    supportsReasoning: true,
+    nativeReasoning: true,
+    reasoningEfforts: ["low", "medium", "high", "none"],
+    reasoningNote: "Native reasoning model. 'Think: Off' excludes and suppresses thinking tokens for direct output.",
   },
   {
     id: "z-ai/glm-5.3-flash",
@@ -24,6 +32,10 @@ export const ALLOWED_MODELS: readonly ModelOption[] = [
     description: "Efficient bilingual high-throughput agent with strong general reasoning",
     supportsImages: false,
     badge: "Throughput",
+    supportsReasoning: true,
+    nativeReasoning: false,
+    reasoningEfforts: ["low", "medium", "high", "none"],
+    reasoningNote: "Supports selectable reasoning effort (Low/Med/High) or completely Off.",
   },
   {
     id: "deepseek/deepseek-v4.1-flash",
@@ -32,6 +44,10 @@ export const ALLOWED_MODELS: readonly ModelOption[] = [
     description: "High-performance code generation, math, and analytical problem solving",
     supportsImages: false,
     badge: "Code & Logic",
+    supportsReasoning: true,
+    nativeReasoning: false,
+    reasoningEfforts: ["low", "medium", "high", "none"],
+    reasoningNote: "Supports selectable reasoning effort (Low/Med/High) or completely Off.",
   },
   {
     id: "recraft/recraft-v4.1-flash",
@@ -41,7 +57,9 @@ export const ALLOWED_MODELS: readonly ModelOption[] = [
     supportsImages: false,
     badge: "Image Gen",
     isImageGenerator: true,
+    supportsReasoning: false,
     supportedAspectRatios: ["1:1", "16:9", "9:16", "4:3", "3:4"],
+    reasoningNote: "Image generation model. Reasoning controls do not apply.",
   },
 ] as const;
 
@@ -54,6 +72,8 @@ export const TRANSLATION_MODEL_INFO: ModelOption = {
   description: "Dedicated high-accuracy translation model powered by Google Gemma 4 26B",
   supportsImages: false,
   badge: "Translate",
+  supportsReasoning: false,
+  reasoningNote: "Dedicated translation model. Reasoning is disabled for direct translation.",
 };
 
 export const ALLOWED_MODEL_IDS: ReadonlySet<string> = new Set([

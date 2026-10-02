@@ -12,7 +12,8 @@ interface ThinkingIndicatorProps {
 
 export function parseThinkingContent(
   rawContent?: string | null,
-  rawReasoning?: string | null
+  rawReasoning?: string | null,
+  forceDisableThinking?: boolean
 ): {
   thinking: string | null;
   content: string;
@@ -20,6 +21,26 @@ export function parseThinkingContent(
 } {
   const contentStr = rawContent || "";
   const reasoningStr = rawReasoning?.trim() || null;
+
+  // When reasoning is explicitly turned off by the user, suppress thinking and strip any leaking tags
+  if (forceDisableThinking) {
+    let clean = contentStr;
+    const thinkStart = clean.indexOf("<think>");
+    if (thinkStart !== -1) {
+      const thinkEnd = clean.indexOf("</think>");
+      if (thinkEnd !== -1) {
+        clean = (clean.slice(0, thinkStart) + clean.slice(thinkEnd + 8)).trim();
+      } else {
+        // Model is still streaming inside a <think> tag; suppress it from visible output
+        clean = clean.slice(0, thinkStart).trim();
+      }
+    }
+    return {
+      thinking: null,
+      content: clean,
+      isStillThinking: false,
+    };
+  }
 
   const thinkStart = contentStr.indexOf("<think>");
 

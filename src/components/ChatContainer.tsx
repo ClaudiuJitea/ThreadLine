@@ -600,12 +600,14 @@ export function ChatContainer() {
               const deltaContent = delta?.content;
               const deltaReasoning = delta?.reasoning || delta?.reasoning_content;
               const finishReason = choice?.finish_reason;
+              const isReasoningActive = selectedReasoningEffort !== "none" && !isTranslationActive;
 
               if (finishReason === "length") {
                 accumulatedText += "\n\n*(Response reached maximum token limit.)*";
               }
 
-              if (deltaReasoning) {
+              // Only accumulate reasoning tokens when reasoning mode is active
+              if (deltaReasoning && isReasoningActive) {
                 setIsSearchingWeb(false);
                 accumulatedReasoning += deltaReasoning;
 
@@ -633,6 +635,22 @@ export function ChatContainer() {
                 setIsSearchingWeb(false);
                 accumulatedText += deltaContent;
 
+                // When reasoning is explicitly off, strip any leaking <think>...</think> markup from content
+                let safeContent = accumulatedText;
+                if (!isReasoningActive) {
+                  const thinkStart = safeContent.indexOf("<think>");
+                  if (thinkStart !== -1) {
+                    const thinkEnd = safeContent.indexOf("</think>");
+                    if (thinkEnd !== -1) {
+                      safeContent = (
+                        safeContent.slice(0, thinkStart) + safeContent.slice(thinkEnd + 8)
+                      ).trim();
+                    } else {
+                      safeContent = safeContent.slice(0, thinkStart).trim();
+                    }
+                  }
+                }
+
                 setConversations((prev) =>
                   prev.map((c) => {
                     if (c.id === targetConversationId) {
@@ -642,8 +660,10 @@ export function ChatContainer() {
                           m.id === assistantMessageId
                             ? {
                                 ...m,
-                                content: accumulatedText,
-                                reasoning: accumulatedReasoning || m.reasoning,
+                                content: safeContent,
+                                reasoning: isReasoningActive
+                                  ? accumulatedReasoning || m.reasoning
+                                  : undefined,
                               }
                             : m
                         ),

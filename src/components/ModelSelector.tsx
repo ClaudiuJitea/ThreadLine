@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { ALLOWED_MODELS } from "@/lib/models";
 import { AllowedModelId } from "@/lib/types";
-import { Check, Eye, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { Check, Eye, ChevronDown, ChevronUp, Sparkles, Brain } from "lucide-react";
 
 interface ModelSelectorProps {
   selectedModelId: AllowedModelId;
@@ -87,6 +87,15 @@ export function ModelSelector({
               >
                 <Sparkles className="w-2.5 h-2.5 text-[#536E59]" />
                 Image Gen
+              </span>
+            )}
+            {activeModel.supportsReasoning && (
+              <span
+                className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-[#DFE9DD] text-[#302D29] border border-[#536E59]/30 shrink-0"
+                title={activeModel.reasoningNote || "Supports reasoning effort controls"}
+              >
+                <Brain className="w-2.5 h-2.5 text-[#536E59]" />
+                {activeModel.nativeReasoning ? "Thinking" : "Reasoning"}
               </span>
             )}
           </div>
@@ -229,6 +238,19 @@ export function ModelSelector({
                       >
                         <Sparkles className="w-2.5 h-2.5 text-[#536E59]" />
                         Image Gen
+                      </span>
+                    )}
+                    {model.supportsReasoning && (
+                      <span
+                        className={`inline-flex items-center gap-1 text-[8.5px] px-1 py-0.2 rounded border ${
+                          isSelected
+                            ? "bg-[#DFE9DD] text-[#302D29] border-[#536E59]/30"
+                            : "bg-[#F0E9DE] text-[#625D55] border-[#D8CFC2]"
+                        }`}
+                        title={model.reasoningNote || "Supports reasoning effort controls"}
+                      >
+                        <Brain className="w-2.5 h-2.5 text-[#536E59]" />
+                        {model.nativeReasoning ? "Thinking" : "Reasoning"}
                       </span>
                     )}
                   </div>
